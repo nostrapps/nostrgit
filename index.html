@@ -836,16 +836,75 @@
     }
 
     // Issue Detail Modal with Thread View
-    const IssueDetailModal = ({ issue, onClose }) => {
-      if (!issue) return null;
+    class IssueDetailModal extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          replyText: '',
+          submitting: false,
+          error: null
+        };
+      }
 
-      const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
+      async handleReplySubmit(e) {
+        e.preventDefault();
+        const { replyText } = this.state;
+        const { issue, nostrPubkey, publishEvent } = this.props;
+
+        if (!replyText.trim()) {
+          this.setState({ error: 'Reply cannot be empty' });
+          return;
         }
-      };
 
-      return html`
+        if (!nostrPubkey) {
+          this.setState({ error: 'Please connect your Nostr extension first' });
+          return;
+        }
+
+        this.setState({ submitting: true, error: null });
+
+        try {
+          // Create NIP-34 reply event (kind 1621)
+          const event = {
+            kind: 1621,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: [
+              ['e', issue.id, '', 'reply'], // Event being replied to
+              ['p', issue.pubkey] // Notify issue author
+            ],
+            content: replyText
+          };
+
+          const result = await publishEvent(event);
+
+          if (result.successful > 0) {
+            this.setState({ replyText: '', submitting: false });
+            alert(`Reply posted successfully! Published to ${result.successful}/${result.total} relays.`);
+          } else {
+            throw new Error('Failed to publish to any relay');
+          }
+        } catch (error) {
+          console.error('Failed to post reply:', error);
+          this.setState({
+            error: error.message || 'Failed to post reply',
+            submitting: false
+          });
+        }
+      }
+
+      render() {
+        const { issue, onClose, nostrPubkey } = this.props;
+        const { replyText, submitting, error } = this.state;
+
+        if (!issue) return null;
+
+        const handleBackdropClick = (e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        };
+
+        return html`
         <div
           class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
           onClick=${handleBackdropClick}
@@ -947,6 +1006,54 @@
                 `}
               </div>
 
+              <!-- Reply Form -->
+              ${nostrPubkey ? html`
+                <div class="mt-6 pt-6 border-t border-lightgray">
+                  <h4 class="text-md font-semibold text-white mb-4">Add a Reply</h4>
+
+                  ${error ? html`
+                    <div class="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                      <p class="text-sm text-red-400">${error}</p>
+                    </div>
+                  ` : null}
+
+                  <form onSubmit=${(e) => this.handleReplySubmit(e)} class="space-y-3">
+                    <textarea
+                      class="w-full h-24 bg-dark border border-lightgray rounded-lg px-4 py-3 text-gray-300 placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                      placeholder="Write your reply..."
+                      value=${replyText}
+                      onInput=${(e) => this.setState({ replyText: e.target.value })}
+                      disabled=${submitting}
+                    ></textarea>
+
+                    <div class="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled=${submitting || !replyText.trim()}
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+                      >
+                        ${submitting ? html`
+                          <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Posting...</span>
+                        ` : html`
+                          <${Icon} name="send" className="h-4 w-4" />
+                          <span>Post Reply</span>
+                        `}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ` : html`
+                <div class="mt-6 pt-6 border-t border-lightgray">
+                  <div class="p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-center">
+                    <p class="text-yellow-400">Connect your Nostr extension to reply to this issue</p>
+                  </div>
+                </div>
+              `}
+
               <!-- Metadata -->
               ${issue.repository ? html`
                 <div class="mt-6 pt-6 border-t border-lightgray">
@@ -961,7 +1068,8 @@
           </div>
         </div>
       `;
-    };
+      }
+    }
 
     // Issues Page Component
     class IssuesPage extends Component {
@@ -1440,6 +1548,8 @@
               <${IssueDetailModal}
                 issue=${selectedIssue}
                 onClose=${() => this.setState({ selectedIssue: null })}
+                nostrPubkey=${this.props.nostrPubkey}
+                publishEvent=${this.props.publishEvent}
               />
             ` : null}
           </div>
