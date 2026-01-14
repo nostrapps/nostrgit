@@ -78,7 +78,7 @@
     };
 
     // Navigation Component
-    const Navigation = ({ currentPage }) => {
+    const Navigation = ({ currentPage, nostrPubkey, nostrConnecting, onConnect, onDisconnect }) => {
       const navItems = [
         { name: 'Home', path: '', icon: 'home' },
         { name: 'Explore', path: 'explore', icon: 'zap' },
@@ -97,16 +97,46 @@
                   NostrGit
                 </span>
               </div>
-              <div class="flex items-center gap-1">
-                ${navItems.map(item => html`
-                  <a
-                    href=${`#${item.path}`}
-                    class="${currentPage === item.path ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white hover:bg-dark'} px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1">
+                  ${navItems.map(item => html`
+                    <a
+                      href=${`#${item.path}`}
+                      class="${currentPage === item.path ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white hover:bg-dark'} px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                    >
+                      <${Icon} name=${item.icon} className="h-4 w-4" />
+                      ${item.name}
+                    </a>
+                  `)}
+                </div>
+
+                ${nostrPubkey ? html`
+                  <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span class="text-sm text-green-300 font-mono">${nostrPubkey.substring(0, 8)}...</span>
+                    <button
+                      onClick=${onDisconnect}
+                      class="ml-2 text-xs text-gray-400 hover:text-white transition-colors"
+                      title="Disconnect"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ` : html`
+                  <button
+                    onClick=${onConnect}
+                    disabled=${nostrConnecting}
+                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                   >
-                    <${Icon} name=${item.icon} className="h-4 w-4" />
-                    ${item.name}
-                  </a>
-                `)}
+                    ${nostrConnecting ? html`
+                      <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Connecting...</span>
+                    ` : html`
+                      <${Icon} name="zap" className="h-4 w-4" />
+                      <span>Connect</span>
+                    `}
+                  </button>
+                `}
               </div>
             </div>
           </div>
@@ -340,7 +370,8 @@
         super(props);
         this.state = {
           activeTab: 'overview',
-          copiedClone: false
+          copiedClone: false,
+          showNewIssue: false
         };
       }
 
@@ -570,6 +601,24 @@
                 </div>
               ` : activeTab === 'issues' ? html`
                 <div class="max-w-6xl">
+                  <!-- New Issue Button -->
+                  ${this.props.nostrPubkey ? html`
+                    <div class="mb-6">
+                      <button
+                        onClick=${() => this.setState({ showNewIssue: true })}
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+                      >
+                        <${Icon} name="messageCircle" className="h-4 w-4" />
+                        New Issue
+                      </button>
+                    </div>
+                  ` : html`
+                    <div class="mb-6 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-yellow-300 text-sm">
+                      <${Icon} name="info" className="h-4 w-4 inline mr-2" />
+                      Connect your Nostr extension to create issues
+                    </div>
+                  `}
+
                   ${repoIssues.length > 0 ? html`
                     <div class="space-y-4">
                       ${repoIssues.sort((a, b) => b.created_at - a.created_at).map(issue => html`
@@ -625,6 +674,161 @@
                   `}
                 </div>
               ` : null}
+            </div>
+
+            <!-- New Issue Form Modal -->
+            ${this.state.showNewIssue ? html`
+              <${NewIssueForm}
+                repo=${repo}
+                nostrPubkey=${this.props.nostrPubkey}
+                publishEvent=${this.props.publishEvent}
+                onClose=${() => this.setState({ showNewIssue: false })}
+              />
+            ` : null}
+          </div>
+        `;
+      }
+    }
+
+    // New Issue Form Component
+    class NewIssueForm extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          title: '',
+          description: '',
+          submitting: false,
+          error: null
+        };
+      }
+
+      async handleSubmit(e) {
+        e.preventDefault();
+        const { title, description } = this.state;
+        const { repo, nostrPubkey, publishEvent, onSuccess, onClose } = this.props;
+
+        if (!title.trim()) {
+          this.setState({ error: 'Title is required' });
+          return;
+        }
+
+        this.setState({ submitting: true, error: null });
+
+        try {
+          // Create NIP-34 issue event (kind 30618)
+          const event = {
+            kind: 30618,
+            created_at: Math.floor(Date.now() / 1000),
+            tags: [
+              ['d', `${Date.now()}`], // unique identifier
+              ['title', title],
+              ['a', `30617:${repo.pubkey}:${repo.identifier || repo.name}`], // repository reference
+              ['status', 'open']
+            ],
+            content: description
+          };
+
+          const result = await publishEvent(event);
+
+          if (result.successful > 0) {
+            this.setState({ title: '', description: '', submitting: false });
+            if (onSuccess) onSuccess(result.signedEvent);
+            if (onClose) onClose();
+            alert(`Issue created successfully! Published to ${result.successful}/${result.total} relays.`);
+          } else {
+            throw new Error('Failed to publish to any relay');
+          }
+        } catch (error) {
+          console.error('Failed to create issue:', error);
+          this.setState({
+            error: error.message || 'Failed to create issue',
+            submitting: false
+          });
+        }
+      }
+
+      render() {
+        const { onClose } = this.props;
+        const { title, description, submitting, error } = this.state;
+
+        return html`
+          <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+               onClick=${(e) => e.target === e.currentTarget && onClose()}>
+            <div class="bg-dark border border-purple-500/30 rounded-lg max-w-2xl w-full shadow-2xl shadow-purple-500/20">
+              <!-- Header -->
+              <div class="bg-gradient-to-r from-purple-900/50 to-dark border-b border-purple-500/30 p-6">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-2xl font-bold text-white">New Issue</h2>
+                  <button
+                    onClick=${onClose}
+                    class="p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
+                    title="Close"
+                  >
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Form -->
+              <form onSubmit=${(e) => this.handleSubmit(e)} class="p-6 space-y-4">
+                ${error ? html`
+                  <div class="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300">
+                    ${error}
+                  </div>
+                ` : null}
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">
+                    Title *
+                  </label>
+                  <input
+                    type="text"
+                    value=${title}
+                    onInput=${(e) => this.setState({ title: e.target.value })}
+                    disabled=${submitting}
+                    placeholder="Brief description of the issue"
+                    class="w-full px-4 py-2 bg-black/40 border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value=${description}
+                    onInput=${(e) => this.setState({ description: e.target.value })}
+                    disabled=${submitting}
+                    placeholder="Detailed description of the issue..."
+                    rows="8"
+                    class="w-full px-4 py-2 bg-black/40 border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50 resize-none"
+                  ></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick=${onClose}
+                    disabled=${submitting}
+                    class="px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled=${submitting || !title.trim()}
+                    class="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+                  >
+                    ${submitting ? html`
+                      <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating...</span>
+                    ` : 'Create Issue'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         `;
@@ -1765,16 +1969,111 @@
         this.state = {
           currentPage: window.location.hash.slice(1) || '',
           repos: [],
-          issues: []
+          issues: [],
+          nostrPubkey: null,
+          nostrConnecting: false
         };
         this.handleReposUpdate = this.handleReposUpdate.bind(this);
         this.handleIssuesUpdate = this.handleIssuesUpdate.bind(this);
+        this.connectNostr = this.connectNostr.bind(this);
+        this.disconnectNostr = this.disconnectNostr.bind(this);
+        this.publishEvent = this.publishEvent.bind(this);
       }
 
       componentDidMount() {
         window.addEventListener('hashchange', () => {
           this.setState({ currentPage: window.location.hash.slice(1) || '' });
         });
+
+        // Check if already connected
+        const savedPubkey = localStorage.getItem('nostr_pubkey');
+        if (savedPubkey && window.nostr) {
+          this.setState({ nostrPubkey: savedPubkey });
+        }
+      }
+
+      async connectNostr() {
+        this.setState({ nostrConnecting: true });
+
+        try {
+          if (!window.nostr) {
+            alert('No Nostr extension found! Please install nos2x, Alby, or another NIP-07 compatible extension.');
+            this.setState({ nostrConnecting: false });
+            return;
+          }
+
+          const pubkey = await window.nostr.getPublicKey();
+          this.setState({ nostrPubkey: pubkey, nostrConnecting: false });
+          localStorage.setItem('nostr_pubkey', pubkey);
+        } catch (error) {
+          console.error('Failed to connect to Nostr extension:', error);
+          alert('Failed to connect. Please make sure you have approved the connection request.');
+          this.setState({ nostrConnecting: false });
+        }
+      }
+
+      disconnectNostr() {
+        this.setState({ nostrPubkey: null });
+        localStorage.removeItem('nostr_pubkey');
+      }
+
+      async publishEvent(event) {
+        if (!window.nostr) {
+          throw new Error('No Nostr extension found');
+        }
+
+        try {
+          // Sign the event with the extension
+          const signedEvent = await window.nostr.signEvent(event);
+
+          // Publish to all relays
+          const relays = [
+            'wss://relay.nostr.net/',
+            'wss://nos.lol/',
+            'wss://relay.damus.io/',
+            'wss://nostr.wine/',
+            'wss://relay.snort.social/',
+            'wss://nostr.mom/',
+            'wss://relay.nostr.band/',
+            'wss://purplepag.es/',
+            'wss://offchain.pub/',
+          ];
+
+          const promises = relays.map(relayUrl => {
+            return new Promise((resolve, reject) => {
+              const ws = new WebSocket(relayUrl);
+              ws.onopen = () => {
+                ws.send(JSON.stringify(['EVENT', signedEvent]));
+              };
+              ws.onmessage = (msg) => {
+                const response = JSON.parse(msg.data);
+                if (response[0] === 'OK' && response[1] === signedEvent.id) {
+                  ws.close();
+                  resolve(relayUrl);
+                } else if (response[0] === 'OK' && !response[2]) {
+                  ws.close();
+                  reject(new Error(`Relay rejected: ${response[3]}`));
+                }
+              };
+              ws.onerror = () => {
+                ws.close();
+                reject(new Error(`Failed to connect to ${relayUrl}`));
+              };
+              setTimeout(() => {
+                ws.close();
+                reject(new Error('Timeout'));
+              }, 5000);
+            });
+          });
+
+          const results = await Promise.allSettled(promises);
+          const successful = results.filter(r => r.status === 'fulfilled').length;
+
+          return { signedEvent, successful, total: relays.length };
+        } catch (error) {
+          console.error('Failed to publish event:', error);
+          throw error;
+        }
       }
 
       handleReposUpdate(repos) {
@@ -1786,7 +2085,7 @@
       }
 
       render() {
-        const { currentPage, repos, issues } = this.state;
+        const { currentPage, repos, issues, nostrPubkey, nostrConnecting } = this.state;
 
         // Parse the route
         const parts = currentPage.split('/');
@@ -1798,7 +2097,12 @@
         if (mainRoute === 'repo' && subRoute) {
           // Repository page route: #repo/{identifier}
           const repo = repos.find(r => r.identifier === subRoute || r.name === subRoute);
-          content = html`<${RepoPage} repo=${repo} allIssues=${issues} />`;
+          content = html`<${RepoPage}
+            repo=${repo}
+            allIssues=${issues}
+            nostrPubkey=${nostrPubkey}
+            publishEvent=${this.publishEvent}
+          />`;
         } else {
           // Standard routes
           switch (mainRoute) {
@@ -1806,7 +2110,11 @@
               content = html`<${ExplorePage} onReposUpdate=${this.handleReposUpdate} />`;
               break;
             case 'issues':
-              content = html`<${IssuesPage} onIssuesUpdate=${this.handleIssuesUpdate} />`;
+              content = html`<${IssuesPage}
+                onIssuesUpdate=${this.handleIssuesUpdate}
+                nostrPubkey=${nostrPubkey}
+                publishEvent=${this.publishEvent}
+              />`;
               break;
             case 'about':
               content = html`<${AboutPage} />`;
@@ -1821,7 +2129,13 @@
 
         return html`
           <div>
-            <${Navigation} currentPage=${mainRoute} />
+            <${Navigation}
+              currentPage=${mainRoute}
+              nostrPubkey=${nostrPubkey}
+              nostrConnecting=${nostrConnecting}
+              onConnect=${this.connectNostr}
+              onDisconnect=${this.disconnectNostr}
+            />
             ${content}
           </div>
         `;
