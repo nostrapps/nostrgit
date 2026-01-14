@@ -1793,37 +1793,36 @@
         const mainRoute = parts[0];
         const subRoute = parts[1];
 
-        let PageComponent;
-        let pageProps = {};
+        let content;
 
         if (mainRoute === 'repo' && subRoute) {
           // Repository page route: #repo/{identifier}
           const repo = repos.find(r => r.identifier === subRoute || r.name === subRoute);
-          PageComponent = () => html`<${RepoPage} repo=${repo} allIssues=${issues} />`;
+          content = html`<${RepoPage} repo=${repo} allIssues=${issues} />`;
         } else {
           // Standard routes
           switch (mainRoute) {
             case 'explore':
-              PageComponent = () => html`<${ExplorePage} onReposUpdate=${this.handleReposUpdate} />`;
+              content = html`<${ExplorePage} onReposUpdate=${this.handleReposUpdate} />`;
               break;
             case 'issues':
-              PageComponent = () => html`<${IssuesPage} onIssuesUpdate=${this.handleIssuesUpdate} />`;
+              content = html`<${IssuesPage} onIssuesUpdate=${this.handleIssuesUpdate} />`;
               break;
             case 'about':
-              PageComponent = AboutPage;
+              content = html`<${AboutPage} />`;
               break;
             case 'docs':
-              PageComponent = DocsPage;
+              content = html`<${DocsPage} />`;
               break;
             default:
-              PageComponent = HomePage;
+              content = html`<${HomePage} />`;
           }
         }
 
         return html`
           <div>
             <${Navigation} currentPage=${mainRoute} />
-            <${PageComponent} ...${pageProps} />
+            ${content}
           </div>
         `;
       }
