@@ -69,6 +69,10 @@
         info: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
         gitBranch: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h10m-5-4v4m-5.343-6.657l-4.95-4.95m0 0a3 3 0 104.243-4.242 3 3 0 00-4.242 4.242zM17 11a3 3 0 100-6 3 3 0 000 6zm0 0a3 3 0 100 6 3 3 0 000-6zm0 0v6"/></svg>`,
         book: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
+        messageCircle: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>`,
+        arrowRight: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`,
+        alertCircle: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        checkCircle: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
       };
       return icons[name] || html`<span>?</span>`;
     };
@@ -78,6 +82,7 @@
       const navItems = [
         { name: 'Home', path: '', icon: 'home' },
         { name: 'Explore', path: 'explore', icon: 'zap' },
+        { name: 'Issues', path: 'issues', icon: 'messageCircle' },
         { name: 'About', path: 'about', icon: 'info' },
         { name: 'Docs', path: 'docs', icon: 'book' },
       ];
@@ -499,6 +504,605 @@
         </div>
       `;
     };
+
+    // Issue Detail Modal with Thread View
+    const IssueDetailModal = ({ issue, onClose }) => {
+      if (!issue) return null;
+
+      const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
+
+      return html`
+        <div
+          class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+          onClick=${handleBackdropClick}
+        >
+          <div class="bg-dark border border-purple-500/30 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
+            <!-- Header -->
+            <div class="sticky top-0 bg-gradient-to-r from-purple-900/50 to-dark border-b border-purple-500/30 p-6 backdrop-blur-sm">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-2">
+                    <${Icon} name=${issue.status === 'closed' ? 'checkCircle' : 'alertCircle'}
+                      className=${`h-6 w-6 ${issue.status === 'closed' ? 'text-purple-500' : 'text-green-500'}`}
+                    />
+                    <h2 class="text-2xl font-bold text-white">${issue.title}</h2>
+                  </div>
+                  <div class="flex items-center gap-4 text-sm text-gray-400">
+                    <span class="${issue.status === 'closed' ? 'text-purple-400' : 'text-green-400'} font-semibold">
+                      ${issue.status === 'closed' ? 'Closed' : 'Open'}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <${Icon} name="calendar" className="h-3 w-3" />
+                      ${new Date(issue.created_at * 1000).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick=${onClose}
+                  class="p-2 hover:bg-purple-500/20 rounded-lg transition-colors flex-shrink-0"
+                  title="Close"
+                >
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+              <!-- Issue Body -->
+              <div class="bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] border border-lightgray rounded-lg p-6 mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                  <a
+                    href=${`https://nostr.eu/${issue.pubkey}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors"
+                  >
+                    <${Icon} name="user" className="h-4 w-4" />
+                    <span class="font-mono">${issue.pubkey.substring(0, 16)}...</span>
+                  </a>
+                  <span class="text-gray-600">•</span>
+                  <span class="text-sm text-gray-500">
+                    ${new Date(issue.created_at * 1000).toLocaleString()}
+                  </span>
+                </div>
+                ${issue.content ? html`
+                  <div class="prose prose-invert max-w-none">
+                    <p class="text-gray-300 whitespace-pre-wrap leading-relaxed">${issue.content}</p>
+                  </div>
+                ` : html`<p class="text-gray-500 italic">No description provided</p>`}
+              </div>
+
+              <!-- Replies Section -->
+              <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                  <${Icon} name="messageCircle" className="h-5 w-5 text-purple-400" />
+                  Replies (${issue.replies ? issue.replies.length : 0})
+                </h3>
+
+                ${issue.replies && issue.replies.length > 0 ? html`
+                  <div class="space-y-3">
+                    ${issue.replies.sort((a, b) => a.created_at - b.created_at).map(reply => html`
+                      <div class="bg-dark border border-lightgray rounded-lg p-4 hover:border-purple-500/30 transition-all">
+                        <div class="flex items-center gap-3 mb-3">
+                          <a
+                            href=${`https://nostr.eu/${reply.pubkey}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors"
+                          >
+                            <${Icon} name="user" className="h-3 w-3" />
+                            <span class="font-mono">${reply.pubkey.substring(0, 12)}...</span>
+                          </a>
+                          <span class="text-gray-600">•</span>
+                          <span class="text-xs text-gray-500">
+                            ${new Date(reply.created_at * 1000).toLocaleString()}
+                          </span>
+                        </div>
+                        <p class="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">${reply.content}</p>
+                      </div>
+                    `)}
+                  </div>
+                ` : html`
+                  <div class="text-center py-8 bg-dark/50 border border-lightgray rounded-lg">
+                    <${Icon} name="messageCircle" className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                    <p class="text-gray-500">No replies yet</p>
+                  </div>
+                `}
+              </div>
+
+              <!-- Metadata -->
+              ${issue.repository ? html`
+                <div class="mt-6 pt-6 border-t border-lightgray">
+                  <div class="flex items-center gap-2 text-sm text-gray-400">
+                    <${Icon} name="gitBranch" className="h-4 w-4" />
+                    <span>Repository:</span>
+                    <code class="text-purple-400">${issue.repository}</code>
+                  </div>
+                </div>
+              ` : null}
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // Issues Page Component
+    class IssuesPage extends Component {
+      constructor() {
+        super();
+        this.state = {
+          issues: [],
+          loading: true,
+          connectedRelays: 0,
+          eventCount: 0,
+          selectedIssue: null,
+          searchQuery: '',
+          statusFilter: 'all'
+        };
+        this.websockets = [];
+        this.seenEvents = new Set();
+        this.connectedRelayUrls = new Set();
+        this.issueReplies = new Map(); // Map issue IDs to their replies
+      }
+
+      componentDidMount() {
+        const relays = [
+          'wss://relay.nostr.net/',
+          'wss://nos.lol/',
+          'wss://relay.damus.io/',
+          'wss://nostr.wine/',
+          'wss://relay.snort.social/',
+          'wss://nostr.mom/',
+          'wss://relay.nostr.band/',
+          'wss://purplepag.es/',
+          'wss://offchain.pub/',
+        ];
+
+        relays.forEach((relayUrl, index) => {
+          try {
+            const ws = new WebSocket(relayUrl);
+
+            ws.onopen = () => {
+              if (!this.connectedRelayUrls.has(relayUrl)) {
+                this.connectedRelayUrls.add(relayUrl);
+                this.setState({ connectedRelays: this.connectedRelayUrls.size });
+              }
+
+              // Subscribe to issues (kind 30618)
+              const issueSubscription = JSON.stringify([
+                'REQ',
+                `issues-${index}`,
+                {
+                  kinds: [30618],
+                  limit: 50,
+                },
+              ]);
+              ws.send(issueSubscription);
+
+              // Subscribe to issue replies (kind 1621)
+              const repliesSubscription = JSON.stringify([
+                'REQ',
+                `replies-${index}`,
+                {
+                  kinds: [1621],
+                  limit: 200,
+                },
+              ]);
+              ws.send(repliesSubscription);
+            };
+
+            ws.onmessage = (event) => {
+              try {
+                const message = JSON.parse(event.data);
+
+                if (message[0] === 'EVENT' && message[2]) {
+                  const nostrEvent = message[2];
+
+                  if (this.seenEvents.has(nostrEvent.id)) {
+                    return;
+                  }
+                  this.seenEvents.add(nostrEvent.id);
+
+                  // Handle issue events (kind 30618)
+                  if (nostrEvent.kind === 30618) {
+                    const issueInfo = this.parseIssueInfo(nostrEvent);
+
+                    this.setState(prevState => {
+                      const exists = prevState.issues.some(i => i.id === issueInfo.id);
+                      if (exists) return prevState;
+
+                      const updated = [...prevState.issues, issueInfo];
+                      return {
+                        issues: updated.sort((a, b) => b.created_at - a.created_at),
+                        eventCount: prevState.eventCount + 1,
+                        loading: false
+                      };
+                    });
+                  }
+
+                  // Handle reply events (kind 1621)
+                  if (nostrEvent.kind === 1621) {
+                    const replyInfo = this.parseReplyInfo(nostrEvent);
+                    if (replyInfo.issueId) {
+                      // Store reply in map
+                      if (!this.issueReplies.has(replyInfo.issueId)) {
+                        this.issueReplies.set(replyInfo.issueId, []);
+                      }
+                      const replies = this.issueReplies.get(replyInfo.issueId);
+                      if (!replies.some(r => r.id === replyInfo.id)) {
+                        replies.push(replyInfo);
+
+                        // Update the corresponding issue with replies
+                        this.setState(prevState => {
+                          const updatedIssues = prevState.issues.map(issue => {
+                            if (issue.id === replyInfo.issueId || issue.identifier === replyInfo.issueId) {
+                              return { ...issue, replies: this.issueReplies.get(replyInfo.issueId) };
+                            }
+                            return issue;
+                          });
+                          return { issues: updatedIssues };
+                        });
+                      }
+                    }
+                  }
+                } else if (message[0] === 'EOSE') {
+                  this.setState({ loading: false });
+                }
+              } catch (err) {
+                console.error('Error parsing message:', err);
+              }
+            };
+
+            ws.onerror = () => {
+              console.error(`Failed to connect to ${relayUrl}`);
+            };
+
+            ws.onclose = () => {
+              if (this.connectedRelayUrls.has(relayUrl)) {
+                this.connectedRelayUrls.delete(relayUrl);
+                this.setState({ connectedRelays: this.connectedRelayUrls.size });
+              }
+            };
+
+            this.websockets.push(ws);
+          } catch (err) {
+            console.error(`Error connecting to ${relayUrl}:`, err);
+          }
+        });
+      }
+
+      componentWillUnmount() {
+        this.connectedRelayUrls.clear();
+        this.websockets.forEach(ws => {
+          if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+          }
+        });
+      }
+
+      parseIssueInfo(event) {
+        const tags = event.tags || [];
+        const info = {
+          id: event.id,
+          title: '',
+          content: event.content || '',
+          status: 'open',
+          repository: undefined,
+          created_at: event.created_at,
+          pubkey: event.pubkey,
+          identifier: undefined,
+          replies: []
+        };
+
+        tags.forEach(tag => {
+          const [key, value] = tag;
+
+          switch (key) {
+            case 'subject':
+            case 'title':
+              info.title = value || '';
+              break;
+            case 'd':
+              info.identifier = value || '';
+              break;
+            case 'a':
+              info.repository = value;
+              break;
+            case 'status':
+              info.status = value === 'closed' ? 'closed' : 'open';
+              break;
+          }
+        });
+
+        if (!info.title) {
+          info.title = `Issue #${event.id.substring(0, 8)}`;
+        }
+
+        return info;
+      }
+
+      parseReplyInfo(event) {
+        const tags = event.tags || [];
+        const info = {
+          id: event.id,
+          content: event.content || '',
+          created_at: event.created_at,
+          pubkey: event.pubkey,
+          issueId: undefined
+        };
+
+        // Find the issue this reply is for
+        tags.forEach(tag => {
+          const [key, value] = tag;
+          if (key === 'e') {
+            info.issueId = value; // Event ID being replied to
+          }
+        });
+
+        return info;
+      }
+
+      formatDate(timestamp) {
+        const now = Date.now() / 1000;
+        const diff = now - timestamp;
+
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
+
+        return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      }
+
+      render() {
+        const { issues, loading, connectedRelays, eventCount, selectedIssue, searchQuery, statusFilter } = this.state;
+
+        // Filter issues
+        const filteredIssues = issues.filter(issue => {
+          // Status filter
+          if (statusFilter !== 'all' && issue.status !== statusFilter) return false;
+
+          // Search filter
+          if (!searchQuery) return true;
+          const query = searchQuery.toLowerCase();
+          return (
+            issue.title.toLowerCase().includes(query) ||
+            issue.content.toLowerCase().includes(query) ||
+            (issue.repository && issue.repository.toLowerCase().includes(query))
+          );
+        });
+
+        return html`
+          <div class="min-h-screen">
+            <!-- Hero Section -->
+            <div class="relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-dark to-dark border-b border-lightgray">
+              <div class="container mx-auto px-4 py-16 relative">
+                <div class="flex items-center gap-3 mb-4">
+                  <${Icon} name="messageCircle" className="h-8 w-8 text-purple-500" />
+                  <h1 class="text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-500 bg-clip-text text-transparent">
+                    Issues
+                  </h1>
+                </div>
+                <p class="text-xl text-gray-400 max-w-2xl">
+                  Browse repository issues announced on the Nostr network
+                </p>
+
+                <!-- Stats Bar -->
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-400">Connected Relays</p>
+                        <p class="text-2xl font-bold text-white">${connectedRelays}/9</p>
+                      </div>
+                      <div class="${connectedRelays > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-500'} w-3 h-3 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-400">Total Issues</p>
+                        <p class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                          ${issues.length}
+                        </p>
+                      </div>
+                      <${Icon} name="alertCircle" className="h-6 w-6 text-purple-500" />
+                    </div>
+                  </div>
+
+                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-400">Events Received</p>
+                        <p class="text-2xl font-bold text-white">${eventCount}</p>
+                      </div>
+                      <${Icon} name="clock" className="h-6 w-6 text-blue-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="container mx-auto px-4 py-8">
+              <!-- Search Bar -->
+              <div class="mb-6">
+                <div class="relative max-w-2xl">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search issues by title, description, or repository..."
+                    value=${searchQuery}
+                    onInput=${(e) => this.setState({ searchQuery: e.target.value })}
+                    class="w-full pl-12 pr-4 py-3 bg-dark border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                  />
+                  ${searchQuery ? html`
+                    <button
+                      onClick=${() => this.setState({ searchQuery: '' })}
+                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  ` : null}
+                </div>
+              </div>
+
+              <!-- Status Filter Tabs -->
+              <div class="mb-6 flex items-center gap-2">
+                <button
+                  onClick=${() => this.setState({ statusFilter: 'all' })}
+                  class="${statusFilter === 'all' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                >
+                  All
+                </button>
+                <button
+                  onClick=${() => this.setState({ statusFilter: 'open' })}
+                  class="${statusFilter === 'open' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                >
+                  <${Icon} name="alertCircle" className="h-4 w-4 mr-1 text-green-500" />
+                  Open
+                </button>
+                <button
+                  onClick=${() => this.setState({ statusFilter: 'closed' })}
+                  class="${statusFilter === 'closed' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                >
+                  <${Icon} name="checkCircle" className="h-4 w-4 mr-1 text-purple-500" />
+                  Closed
+                </button>
+              </div>
+
+              <!-- Loading State -->
+              ${loading && issues.length === 0 ? html`
+                <div class="space-y-4">
+                  ${[1, 2, 3, 4].map(i => html`
+                    <div key=${i} class="bg-dark border border-lightgray rounded-lg p-6 animate-pulse">
+                      <div class="h-6 bg-lightgray rounded w-3/4 mb-4"></div>
+                      <div class="h-4 bg-lightgray rounded w-full mb-2"></div>
+                      <div class="h-4 bg-lightgray rounded w-2/3"></div>
+                    </div>
+                  `)}
+                </div>
+              ` : null}
+
+              <!-- Issues List -->
+              <div class="space-y-4">
+                ${filteredIssues.map((issue, index) => html`
+                  <div
+                    key=${issue.id}
+                    onClick=${() => this.setState({ selectedIssue: issue })}
+                    class="group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 rounded-lg border cursor-pointer fade-in"
+                    style="animation-delay: ${index * 0.05}s"
+                  >
+                    <div class="flex items-start gap-4">
+                      <${Icon} name=${issue.status === 'closed' ? 'checkCircle' : 'alertCircle'}
+                        className=${`h-6 w-6 flex-shrink-0 mt-1 ${issue.status === 'closed' ? 'text-purple-500' : 'text-green-500'}`}
+                      />
+
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-4 mb-2">
+                          <h3 class="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors">
+                            ${issue.title}
+                          </h3>
+                          <${Icon} name="arrowRight" className="h-5 w-5 text-gray-500 group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                        </div>
+
+                        ${issue.content ? html`
+                          <p class="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-3">
+                            ${issue.content}
+                          </p>
+                        ` : null}
+
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                          ${issue.repository ? html`
+                            <span class="flex items-center gap-1">
+                              <${Icon} name="gitBranch" className="h-3 w-3" />
+                              <code class="text-xs font-mono text-purple-400">${issue.repository.split(':').pop()}</code>
+                            </span>
+                          ` : null}
+
+                          <span class="flex items-center gap-1">
+                            <${Icon} name="calendar" className="h-3 w-3" />
+                            ${this.formatDate(issue.created_at)}
+                          </span>
+
+                          ${issue.replies && issue.replies.length > 0 ? html`
+                            <span class="flex items-center gap-1 text-purple-400">
+                              <${Icon} name="messageCircle" className="h-3 w-3" />
+                              ${issue.replies.length}
+                            </span>
+                          ` : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `)}
+              </div>
+
+              <!-- Empty State -->
+              ${!loading && issues.length === 0 ? html`
+                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
+                  <${Icon} name="messageCircle" className="h-16 w-16 text-purple-500 mx-auto mb-4 opacity-50" />
+                  <h3 class="text-xl font-semibold mb-2 text-white">
+                    No issues found yet
+                  </h3>
+                  <p class="text-gray-400">
+                    Listening for issue announcements on the Nostr network...
+                  </p>
+                  <div class="mt-4">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
+                  </div>
+                </div>
+              ` : null}
+
+              <!-- No Search Results -->
+              ${!loading && issues.length > 0 && filteredIssues.length === 0 ? html`
+                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
+                  <svg class="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <h3 class="text-xl font-semibold mb-2 text-white">
+                    No issues match your search
+                  </h3>
+                  <p class="text-gray-400">
+                    Try adjusting your search query or filters
+                  </p>
+                  <button
+                    onClick=${() => this.setState({ searchQuery: '', statusFilter: 'all' })}
+                    class="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              ` : null}
+            </div>
+
+            <!-- Issue Detail Modal -->
+            ${selectedIssue ? html`
+              <${IssueDetailModal}
+                issue=${selectedIssue}
+                onClose=${() => this.setState({ selectedIssue: null })}
+              />
+            ` : null}
+          </div>
+        `;
+      }
+    }
 
     // [PREVIOUS EXPLORE PAGE CODE GOES HERE - keeping it exactly as before]
     class ExplorePage extends Component {
@@ -1039,6 +1643,9 @@
         switch (currentPage) {
           case 'explore':
             PageComponent = ExplorePage;
+            break;
+          case 'issues':
+            PageComponent = IssuesPage;
             break;
           case 'about':
             PageComponent = AboutPage;
