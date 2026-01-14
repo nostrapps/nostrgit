@@ -334,176 +334,302 @@
       </div>
     `;
 
-    // Repository Detail Modal Component
-    const RepoDetailModal = ({ repo, onClose }) => {
-      if (!repo) return null;
+    // Repository Page Component with Tabs
+    class RepoPage extends Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          activeTab: 'overview',
+          copiedClone: false
+        };
+      }
 
-      const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
+      handleCopyClone(cloneUrl) {
+        navigator.clipboard.writeText(`git clone ${cloneUrl}`).then(() => {
+          this.setState({ copiedClone: true });
+          setTimeout(() => this.setState({ copiedClone: false }), 2000);
+        });
+      }
+
+      formatDate(timestamp) {
+        const now = Date.now() / 1000;
+        const diff = now - timestamp;
+
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
+
+        return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      }
+
+      render() {
+        const { repo, allIssues = [] } = this.props;
+        const { activeTab, copiedClone } = this.state;
+
+        if (!repo) {
+          return html`
+            <div class="min-h-screen flex items-center justify-center">
+              <div class="text-center">
+                <${Icon} name="alertCircle" className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                <h2 class="text-2xl font-bold text-white mb-2">Repository not found</h2>
+                <p class="text-gray-400 mb-6">This repository could not be loaded</p>
+                <a href="#explore" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                  Back to Explore
+                </a>
+              </div>
+            </div>
+          `;
         }
-      };
 
-      const handleCopyClone = () => {
-        navigator.clipboard.writeText(`git clone ${repo.clone}`);
-      };
+        // Filter issues for this repository
+        const repoIssues = allIssues.filter(issue => {
+          if (!issue.repository) return false;
+          // Match by identifier or name
+          const repoParts = issue.repository.split(':');
+          const repoId = repoParts[repoParts.length - 1];
+          return repoId === repo.identifier || repoId === repo.name;
+        });
 
-      return html`
-        <div
-          class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
-          onClick=${handleBackdropClick}
-        >
-          <div class="bg-dark border border-purple-500/30 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
+        return html`
+          <div class="min-h-screen">
             <!-- Header -->
-            <div class="sticky top-0 bg-gradient-to-r from-purple-900/50 to-dark border-b border-purple-500/30 p-6 backdrop-blur-sm">
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex-1">
-                  <h2 class="text-3xl font-bold text-white mb-2">${repo.name}</h2>
-                  ${repo.description ? html`
-                    <p class="text-gray-300 text-lg leading-relaxed">${repo.description}</p>
-                  ` : null}
+            <div class="bg-gradient-to-br from-purple-900/20 via-dark to-dark border-b border-lightgray">
+              <div class="container mx-auto px-4 py-8">
+                <div class="flex items-center gap-2 text-sm text-gray-400 mb-4">
+                  <a href="#explore" class="hover:text-purple-400 transition-colors">Explore</a>
+                  <${Icon} name="arrowRight" className="h-3 w-3" />
+                  <span class="text-white">${repo.name}</span>
                 </div>
-                <button
-                  onClick=${onClose}
-                  class="p-2 hover:bg-purple-500/20 rounded-lg transition-colors flex-shrink-0"
-                  title="Close"
-                >
-                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
+
+                <div class="flex items-start justify-between gap-4 mb-6">
+                  <div class="flex-1">
+                    <h1 class="text-4xl font-bold text-white mb-3">${repo.name}</h1>
+                    ${repo.description ? html`
+                      <p class="text-xl text-gray-300 leading-relaxed">${repo.description}</p>
+                    ` : null}
+                  </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="flex items-center gap-2 border-b border-lightgray -mb-px">
+                  <button
+                    onClick=${() => this.setState({ activeTab: 'overview' })}
+                    class="${activeTab === 'overview' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'} px-4 py-3 border-b-2 font-medium transition-colors"
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick=${() => this.setState({ activeTab: 'issues' })}
+                    class="${activeTab === 'issues' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'} px-4 py-3 border-b-2 font-medium transition-colors flex items-center gap-2"
+                  >
+                    <${Icon} name="messageCircle" className="h-4 w-4" />
+                    Issues
+                    ${repoIssues.length > 0 ? html`
+                      <span class="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300">
+                        ${repoIssues.length}
+                      </span>
+                    ` : null}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Content -->
-            <div class="p-6 space-y-6">
-              <!-- Clone URL -->
-              ${repo.clone ? html`
-                <div class="bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] border border-purple-500/20 rounded-lg p-4">
-                  <div class="flex items-center gap-2 mb-3">
-                    <${Icon} name="terminal" className="h-5 w-5 text-purple-400" />
-                    <h3 class="text-lg font-semibold text-white">Clone Repository</h3>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <code class="flex-1 px-4 py-3 bg-black/40 rounded font-mono text-sm border border-lightgray text-purple-300 break-all">
-                      git clone ${repo.clone}
-                    </code>
-                    <button
-                      onClick=${handleCopyClone}
-                      class="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all"
-                      title="Copy to clipboard"
-                    >
-                      <${Icon} name="copy" className="h-5 w-5 text-purple-400" />
-                    </button>
-                  </div>
-                </div>
-              ` : null}
-
-              <!-- Website -->
-              ${repo.web ? html`
-                <div class="bg-dark border border-lightgray rounded-lg p-4">
-                  <div class="flex items-center gap-2 mb-3">
-                    <${Icon} name="globe" className="h-5 w-5 text-blue-400" />
-                    <h3 class="text-lg font-semibold text-white">Website</h3>
-                  </div>
-                  <a
-                    href=${repo.web}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-lg text-blue-300 hover:text-blue-200 transition-all"
-                  >
-                    <span class="break-all">${repo.web}</span>
-                    <${Icon} name="externalLink" className="h-4 w-4 flex-shrink-0" />
-                  </a>
-                </div>
-              ` : null}
-
-              <!-- Topics -->
-              ${repo.topics && repo.topics.length > 0 ? html`
-                <div class="bg-dark border border-lightgray rounded-lg p-4">
-                  <div class="flex items-center gap-2 mb-3">
-                    <${Icon} name="tag" className="h-5 w-5 text-purple-400" />
-                    <h3 class="text-lg font-semibold text-white">Topics</h3>
-                  </div>
-                  <div class="flex flex-wrap gap-2">
-                    ${repo.topics.map(topic => html`
-                      <span class="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm text-purple-300">
-                        ${topic}
-                      </span>
-                    `)}
-                  </div>
-                </div>
-              ` : null}
-
-              <!-- Maintainers -->
-              ${repo.maintainers && repo.maintainers.length > 0 ? html`
-                <div class="bg-dark border border-lightgray rounded-lg p-4">
-                  <div class="flex items-center gap-2 mb-3">
-                    <${Icon} name="users" className="h-5 w-5 text-green-400" />
-                    <h3 class="text-lg font-semibold text-white">Maintainers</h3>
-                  </div>
-                  <div class="space-y-2">
-                    ${repo.maintainers.map(maintainer => html`
-                      <a
-                        href=${`https://nostr.eu/${maintainer}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="flex items-center gap-3 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 rounded-lg transition-all group"
-                      >
-                        <${Icon} name="user" className="h-4 w-4 text-blue-400" />
-                        <code class="flex-1 font-mono text-sm text-blue-300 break-all">${maintainer}</code>
-                        <${Icon} name="externalLink" className="h-4 w-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </a>
-                    `)}
-                  </div>
-                </div>
-              ` : null}
-
-              <!-- Metadata -->
-              <div class="bg-dark border border-lightgray rounded-lg p-4">
-                <div class="flex items-center gap-2 mb-3">
-                  <${Icon} name="info" className="h-5 w-5 text-gray-400" />
-                  <h3 class="text-lg font-semibold text-white">Metadata</h3>
-                </div>
-                <div class="space-y-3">
-                  <div class="flex items-center gap-3">
-                    <${Icon} name="calendar" className="h-4 w-4 text-gray-400" />
-                    <span class="text-sm text-gray-400">Created:</span>
-                    <span class="text-sm text-white font-mono">
-                      ${new Date(repo.created_at * 1000).toLocaleString()}
-                    </span>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <${Icon} name="user" className="h-4 w-4 text-gray-400 mt-0.5" />
-                    <span class="text-sm text-gray-400">Owner:</span>
-                    <a
-                      href=${`https://nostr.eu/${repo.pubkey}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="flex-1 font-mono text-sm text-purple-300 hover:text-purple-200 break-all transition-colors"
-                    >
-                      ${repo.pubkey}
-                    </a>
-                  </div>
-                  ${repo.identifier ? html`
-                    <div class="flex items-center gap-3">
-                      <${Icon} name="tag" className="h-4 w-4 text-gray-400" />
-                      <span class="text-sm text-gray-400">Identifier:</span>
-                      <code class="text-sm text-white font-mono">${repo.identifier}</code>
+            <!-- Tab Content -->
+            <div class="container mx-auto px-4 py-8">
+              ${activeTab === 'overview' ? html`
+                <div class="max-w-4xl space-y-6">
+                  <!-- Clone URL -->
+                  ${repo.clone ? html`
+                    <div class="bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] border border-purple-500/20 rounded-lg p-6">
+                      <div class="flex items-center gap-2 mb-4">
+                        <${Icon} name="terminal" className="h-5 w-5 text-purple-400" />
+                        <h2 class="text-xl font-semibold text-white">Clone Repository</h2>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <code class="flex-1 px-4 py-3 bg-black/40 rounded font-mono text-sm border border-lightgray text-purple-300 break-all">
+                          git clone ${repo.clone}
+                        </code>
+                        <button
+                          onClick=${() => this.handleCopyClone(repo.clone)}
+                          class="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all"
+                          title="Copy to clipboard"
+                        >
+                          ${copiedClone
+                            ? html`<${Icon} name="check" className="h-5 w-5 text-green-400" />`
+                            : html`<${Icon} name="copy" className="h-5 w-5 text-purple-400" />`
+                          }
+                        </button>
+                      </div>
                     </div>
                   ` : null}
-                  <div class="flex items-center gap-3">
-                    <${Icon} name="zap" className="h-4 w-4 text-gray-400" />
-                    <span class="text-sm text-gray-400">Event ID:</span>
-                    <code class="flex-1 text-sm text-gray-300 font-mono break-all">${repo.id}</code>
+
+                  <!-- Website -->
+                  ${repo.web ? html`
+                    <div class="bg-dark border border-lightgray rounded-lg p-6">
+                      <div class="flex items-center gap-2 mb-4">
+                        <${Icon} name="globe" className="h-5 w-5 text-blue-400" />
+                        <h2 class="text-xl font-semibold text-white">Website</h2>
+                      </div>
+                      <a
+                        href=${repo.web}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-lg text-blue-300 hover:text-blue-200 transition-all"
+                      >
+                        <span class="break-all">${repo.web}</span>
+                        <${Icon} name="externalLink" className="h-4 w-4 flex-shrink-0" />
+                      </a>
+                    </div>
+                  ` : null}
+
+                  <!-- Topics -->
+                  ${repo.topics && repo.topics.length > 0 ? html`
+                    <div class="bg-dark border border-lightgray rounded-lg p-6">
+                      <div class="flex items-center gap-2 mb-4">
+                        <${Icon} name="tag" className="h-5 w-5 text-purple-400" />
+                        <h2 class="text-xl font-semibold text-white">Topics</h2>
+                      </div>
+                      <div class="flex flex-wrap gap-2">
+                        ${repo.topics.map(topic => html`
+                          <span class="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm text-purple-300">
+                            ${topic}
+                          </span>
+                        `)}
+                      </div>
+                    </div>
+                  ` : null}
+
+                  <!-- Maintainers -->
+                  ${repo.maintainers && repo.maintainers.length > 0 ? html`
+                    <div class="bg-dark border border-lightgray rounded-lg p-6">
+                      <div class="flex items-center gap-2 mb-4">
+                        <${Icon} name="users" className="h-5 w-5 text-green-400" />
+                        <h2 class="text-xl font-semibold text-white">Maintainers</h2>
+                      </div>
+                      <div class="space-y-2">
+                        ${repo.maintainers.map(maintainer => html`
+                          <a
+                            href=${`https://nostr.eu/${maintainer}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-3 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 rounded-lg transition-all group"
+                          >
+                            <${Icon} name="user" className="h-4 w-4 text-blue-400" />
+                            <code class="flex-1 font-mono text-sm text-blue-300 break-all">${maintainer}</code>
+                            <${Icon} name="externalLink" className="h-4 w-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        `)}
+                      </div>
+                    </div>
+                  ` : null}
+
+                  <!-- Metadata -->
+                  <div class="bg-dark border border-lightgray rounded-lg p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                      <${Icon} name="info" className="h-5 w-5 text-gray-400" />
+                      <h2 class="text-xl font-semibold text-white">Metadata</h2>
+                    </div>
+                    <div class="space-y-3">
+                      <div class="flex items-center gap-3">
+                        <${Icon} name="calendar" className="h-4 w-4 text-gray-400" />
+                        <span class="text-sm text-gray-400">Created:</span>
+                        <span class="text-sm text-white font-mono">
+                          ${new Date(repo.created_at * 1000).toLocaleString()}
+                        </span>
+                      </div>
+                      <div class="flex items-start gap-3">
+                        <${Icon} name="user" className="h-4 w-4 text-gray-400 mt-0.5" />
+                        <span class="text-sm text-gray-400">Owner:</span>
+                        <a
+                          href=${`https://nostr.eu/${repo.pubkey}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="flex-1 font-mono text-sm text-purple-300 hover:text-purple-200 break-all transition-colors"
+                        >
+                          ${repo.pubkey}
+                        </a>
+                      </div>
+                      ${repo.identifier ? html`
+                        <div class="flex items-center gap-3">
+                          <${Icon} name="tag" className="h-4 w-4 text-gray-400" />
+                          <span class="text-sm text-gray-400">Identifier:</span>
+                          <code class="text-sm text-white font-mono">${repo.identifier}</code>
+                        </div>
+                      ` : null}
+                      <div class="flex items-center gap-3">
+                        <${Icon} name="zap" className="h-4 w-4 text-gray-400" />
+                        <span class="text-sm text-gray-400">Event ID:</span>
+                        <code class="flex-1 text-sm text-gray-300 font-mono break-all">${repo.id}</code>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ` : activeTab === 'issues' ? html`
+                <div class="max-w-6xl">
+                  ${repoIssues.length > 0 ? html`
+                    <div class="space-y-4">
+                      ${repoIssues.sort((a, b) => b.created_at - a.created_at).map(issue => html`
+                        <a
+                          href=${'#issues'}
+                          class="block group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 rounded-lg border"
+                        >
+                          <div class="flex items-start gap-4">
+                            <${Icon} name=${issue.status === 'closed' ? 'checkCircle' : 'alertCircle'}
+                              className=${`h-6 w-6 flex-shrink-0 mt-1 ${issue.status === 'closed' ? 'text-purple-500' : 'text-green-500'}`}
+                            />
+
+                            <div class="flex-1 min-w-0">
+                              <div class="flex items-start justify-between gap-4 mb-2">
+                                <h3 class="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors">
+                                  ${issue.title}
+                                </h3>
+                                <${Icon} name="arrowRight" className="h-5 w-5 text-gray-500 group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                              </div>
+
+                              ${issue.content ? html`
+                                <p class="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-3">
+                                  ${issue.content}
+                                </p>
+                              ` : null}
+
+                              <div class="flex items-center gap-4 text-sm text-gray-500">
+                                <span class="flex items-center gap-1">
+                                  <${Icon} name="calendar" className="h-3 w-3" />
+                                  ${this.formatDate(issue.created_at)}
+                                </span>
+
+                                ${issue.replies && issue.replies.length > 0 ? html`
+                                  <span class="flex items-center gap-1 text-purple-400">
+                                    <${Icon} name="messageCircle" className="h-3 w-3" />
+                                    ${issue.replies.length}
+                                  </span>
+                                ` : null}
+                              </div>
+                            </div>
+                          </div>
+                        </a>
+                      `)}
+                    </div>
+                  ` : html`
+                    <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg">
+                      <${Icon} name="messageCircle" className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                      <h3 class="text-xl font-semibold text-white mb-2">No issues yet</h3>
+                      <p class="text-gray-400">
+                        This repository doesn't have any issues announced on Nostr
+                      </p>
+                    </div>
+                  `}
+                </div>
+              ` : null}
             </div>
           </div>
-        </div>
-      `;
-    };
+        `;
+      }
+    }
 
     // Issue Detail Modal with Thread View
     const IssueDetailModal = ({ issue, onClose }) => {
@@ -719,8 +845,15 @@
                       if (exists) return prevState;
 
                       const updated = [...prevState.issues, issueInfo];
+                      const sortedIssues = updated.sort((a, b) => b.created_at - a.created_at);
+
+                      // Notify parent of issues update
+                      if (this.props.onIssuesUpdate) {
+                        this.props.onIssuesUpdate(sortedIssues);
+                      }
+
                       return {
-                        issues: updated.sort((a, b) => b.created_at - a.created_at),
+                        issues: sortedIssues,
                         eventCount: prevState.eventCount + 1,
                         loading: false
                       };
@@ -747,6 +880,12 @@
                             }
                             return issue;
                           });
+
+                          // Notify parent of issues update
+                          if (this.props.onIssuesUpdate) {
+                            this.props.onIssuesUpdate(updatedIssues);
+                          }
+
                           return { issues: updatedIssues };
                         });
                       }
@@ -1115,7 +1254,6 @@
           eventCount: 0,
           activeFilter: 'all',
           copiedId: null,
-          selectedRepo: null,
           searchQuery: ''
         };
         this.websockets = [];
@@ -1180,8 +1318,15 @@
                       if (exists) return prevState;
 
                       const updated = [...prevState.repos, repoInfo];
+                      const sortedRepos = updated.sort((a, b) => b.created_at - a.created_at);
+
+                      // Notify parent of repos update
+                      if (this.props.onReposUpdate) {
+                        this.props.onReposUpdate(sortedRepos);
+                      }
+
                       return {
-                        repos: updated.sort((a, b) => b.created_at - a.created_at),
+                        repos: sortedRepos,
                         eventCount: prevState.eventCount + 1,
                         loading: false
                       };
@@ -1302,7 +1447,7 @@
       }
 
       render() {
-        const { repos, loading, connectedRelays, eventCount, activeFilter, copiedId, selectedRepo, searchQuery } = this.state;
+        const { repos, loading, connectedRelays, eventCount, activeFilter, copiedId, searchQuery } = this.state;
 
         // Filter repos based on search query
         const filteredRepos = repos.filter(repo => {
@@ -1436,10 +1581,10 @@
               <!-- Repository Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 ${filteredRepos.map((repo, index) => html`
-                  <div
+                  <a
                     key=${repo.id}
-                    onClick=${() => this.setState({ selectedRepo: repo })}
-                    class="group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:scale-[1.02] rounded-lg border shadow-sm fade-in cursor-pointer"
+                    href=${`#repo/${repo.identifier || repo.name}`}
+                    class="block group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:scale-[1.02] rounded-lg border shadow-sm fade-in"
                     style="animation-delay: ${index * 0.05}s"
                   >
                     <!-- Repo Header -->
@@ -1567,7 +1712,7 @@
                         <${Icon} name="externalLink" className="h-2.5 w-2.5 opacity-0 group-hover/owner:opacity-50 transition-opacity" />
                       </a>
                     </div>
-                  </div>
+                  </a>
                 `)}
               </div>
 
@@ -1608,14 +1753,6 @@
                 </div>
               ` : null}
             </div>
-
-            <!-- Repository Detail Modal -->
-            ${selectedRepo ? html`
-              <${RepoDetailModal}
-                repo=${selectedRepo}
-                onClose=${() => this.setState({ selectedRepo: null })}
-              />
-            ` : null}
           </div>
         `;
       }
@@ -1626,8 +1763,12 @@
       constructor() {
         super();
         this.state = {
-          currentPage: window.location.hash.slice(1) || ''
+          currentPage: window.location.hash.slice(1) || '',
+          repos: [],
+          issues: []
         };
+        this.handleReposUpdate = this.handleReposUpdate.bind(this);
+        this.handleIssuesUpdate = this.handleIssuesUpdate.bind(this);
       }
 
       componentDidMount() {
@@ -1636,31 +1777,53 @@
         });
       }
 
+      handleReposUpdate(repos) {
+        this.setState({ repos });
+      }
+
+      handleIssuesUpdate(issues) {
+        this.setState({ issues });
+      }
+
       render() {
-        const { currentPage } = this.state;
+        const { currentPage, repos, issues } = this.state;
+
+        // Parse the route
+        const parts = currentPage.split('/');
+        const mainRoute = parts[0];
+        const subRoute = parts[1];
 
         let PageComponent;
-        switch (currentPage) {
-          case 'explore':
-            PageComponent = ExplorePage;
-            break;
-          case 'issues':
-            PageComponent = IssuesPage;
-            break;
-          case 'about':
-            PageComponent = AboutPage;
-            break;
-          case 'docs':
-            PageComponent = DocsPage;
-            break;
-          default:
-            PageComponent = HomePage;
+        let pageProps = {};
+
+        if (mainRoute === 'repo' && subRoute) {
+          // Repository page route: #repo/{identifier}
+          const repo = repos.find(r => r.identifier === subRoute || r.name === subRoute);
+          PageComponent = () => html`<${RepoPage} repo=${repo} allIssues=${issues} />`;
+        } else {
+          // Standard routes
+          switch (mainRoute) {
+            case 'explore':
+              PageComponent = () => html`<${ExplorePage} onReposUpdate=${this.handleReposUpdate} />`;
+              break;
+            case 'issues':
+              PageComponent = () => html`<${IssuesPage} onIssuesUpdate=${this.handleIssuesUpdate} />`;
+              break;
+            case 'about':
+              PageComponent = AboutPage;
+              break;
+            case 'docs':
+              PageComponent = DocsPage;
+              break;
+            default:
+              PageComponent = HomePage;
+          }
         }
 
         return html`
           <div>
-            <${Navigation} currentPage=${currentPage} />
-            <${PageComponent} />
+            <${Navigation} currentPage=${mainRoute} />
+            <${PageComponent} ...${pageProps} />
           </div>
         `;
       }
