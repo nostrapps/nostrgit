@@ -682,6 +682,7 @@
                 repo=${repo}
                 nostrPubkey=${this.props.nostrPubkey}
                 publishEvent=${this.props.publishEvent}
+                onSuccess=${this.props.onNewIssue}
                 onClose=${() => this.setState({ showNewIssue: false })}
               />
             ` : null}
@@ -2085,6 +2086,7 @@
         };
         this.handleReposUpdate = this.handleReposUpdate.bind(this);
         this.handleIssuesUpdate = this.handleIssuesUpdate.bind(this);
+        this.addNewIssue = this.addNewIssue.bind(this);
         this.connectNostr = this.connectNostr.bind(this);
         this.disconnectNostr = this.disconnectNostr.bind(this);
         this.publishEvent = this.publishEvent.bind(this);
@@ -2194,6 +2196,31 @@
         this.setState({ issues });
       }
 
+      addNewIssue(signedEvent) {
+        // Parse the event to create an issue object
+        const titleTag = signedEvent.tags.find(t => t[0] === 'title');
+        const statusTag = signedEvent.tags.find(t => t[0] === 'status');
+        const aTag = signedEvent.tags.find(t => t[0] === 'a');
+        const dTag = signedEvent.tags.find(t => t[0] === 'd');
+
+        const newIssue = {
+          id: signedEvent.id,
+          pubkey: signedEvent.pubkey,
+          created_at: signedEvent.created_at,
+          title: titleTag ? titleTag[1] : 'Untitled',
+          content: signedEvent.content,
+          status: statusTag ? statusTag[1] : 'open',
+          repository: aTag ? aTag[1] : null,
+          identifier: dTag ? dTag[1] : signedEvent.id,
+          replies: []
+        };
+
+        // Add to issues array
+        this.setState(prevState => ({
+          issues: [newIssue, ...prevState.issues]
+        }));
+      }
+
       render() {
         const { currentPage, repos, issues, nostrPubkey, nostrConnecting } = this.state;
 
@@ -2212,6 +2239,7 @@
             allIssues=${issues}
             nostrPubkey=${nostrPubkey}
             publishEvent=${this.publishEvent}
+            onNewIssue=${this.addNewIssue}
           />`;
         } else {
           // Standard routes
