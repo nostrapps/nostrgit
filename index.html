@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NostrGit - Decentralized Git on Nostr</title>
+  <meta name="description" content="A truly censorship-resistant alternative to GitHub built on the Nostr protocol">
+  <meta name="theme-color" content="#9333ea">
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            lightgray: "#383B42",
+            dark: "#22262C",
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-out both;
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.2s ease-out;
+    }
+    body {
+      background: #0E1116;
+      color: white;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import { html, render, Component } from 'https://esm.sh/htm/preact/standalone';
+
+    // Lucide icons as inline SVGs
+    const Icon = ({ name, className = "h-4 w-4" }) => {
+      const icons = {
+        zap: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+        calendar: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+        users: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`,
+        user: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>`,
+        externalLink: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>`,
+        globe: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        tag: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>`,
+        terminal: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`,
+        copy: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`,
+        check: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`,
+        trendingUp: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>`,
+        clock: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        home: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+        info: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+        gitBranch: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20h10m-5-4v4m-5.343-6.657l-4.95-4.95m0 0a3 3 0 104.243-4.242 3 3 0 00-4.242 4.242zM17 11a3 3 0 100-6 3 3 0 000 6zm0 0a3 3 0 100 6 3 3 0 000-6zm0 0v6"/></svg>`,
+        book: html`<svg class="${className}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
+      };
+      return icons[name] || html`<span>?</span>`;
+    };
+
+    // Navigation Component
+    const Navigation = ({ currentPage }) => {
+      const navItems = [
+        { name: 'Home', path: '', icon: 'home' },
+        { name: 'Explore', path: 'explore', icon: 'zap' },
+        { name: 'About', path: 'about', icon: 'info' },
+        { name: 'Docs', path: 'docs', icon: 'book' },
+      ];
+
+      return html`
+        <nav class="border-b border-lightgray bg-dark/50 backdrop-blur-sm sticky top-0 z-50">
+          <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+              <div class="flex items-center gap-2">
+                <${Icon} name="gitBranch" className="h-8 w-8 text-purple-500" />
+                <span class="text-2xl font-bold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+                  NostrGit
+                </span>
+              </div>
+              <div class="flex items-center gap-1">
+                ${navItems.map(item => html`
+                  <a
+                    href=${`#${item.path}`}
+                    class="${currentPage === item.path ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white hover:bg-dark'} px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                  >
+                    <${Icon} name=${item.icon} className="h-4 w-4" />
+                    ${item.name}
+                  </a>
+                `)}
+              </div>
+            </div>
+          </div>
+        </nav>
+      `;
+    };
+
+    // Home Page Component
+    const HomePage = () => html`
+      <div class="min-h-screen">
+        <!-- Hero Section -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-purple-900/30 via-dark to-dark border-b border-lightgray">
+          <div class="container mx-auto px-4 py-24 text-center">
+            <div class="flex justify-center mb-6">
+              <${Icon} name="gitBranch" className="h-20 w-20 text-purple-500" />
+            </div>
+            <h1 class="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-purple-500 bg-clip-text text-transparent">
+              Welcome to NostrGit
+            </h1>
+            <p class="text-2xl text-gray-400 max-w-3xl mx-auto mb-12">
+              A truly censorship-resistant alternative to GitHub that has a chance of working
+            </p>
+            <div class="flex justify-center gap-4">
+              <a
+                href="#explore"
+                class="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-lg font-semibold transition-all duration-200 hover:scale-105"
+              >
+                Explore Repositories
+              </a>
+              <a
+                href="#about"
+                class="px-8 py-4 bg-dark border border-lightgray hover:border-purple-500 rounded-lg text-lg font-semibold transition-all duration-200"
+              >
+                Learn More
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="container mx-auto px-4 py-16">
+          <h2 class="text-4xl font-bold text-center mb-12">Why NostrGit?</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="p-6 bg-dark border border-lightgray rounded-lg hover:border-purple-500 transition-all duration-200">
+              <div class="mb-4">
+                <${Icon} name="zap" className="h-12 w-12 text-purple-500" />
+              </div>
+              <h3 class="text-xl font-semibold mb-3">Decentralized</h3>
+              <p class="text-gray-400">
+                Built on Nostr protocol. No single point of failure or control. Your code, your control.
+              </p>
+            </div>
+            <div class="p-6 bg-dark border border-lightgray rounded-lg hover:border-purple-500 transition-all duration-200">
+              <div class="mb-4">
+                <${Icon} name="globe" className="h-12 w-12 text-blue-500" />
+              </div>
+              <h3 class="text-xl font-semibold mb-3">Censorship Resistant</h3>
+              <p class="text-gray-400">
+                No gatekeepers. No takedowns. Your repositories stay online as long as one relay exists.
+              </p>
+            </div>
+            <div class="p-6 bg-dark border border-lightgray rounded-lg hover:border-purple-500 transition-all duration-200">
+              <div class="mb-4">
+                <${Icon} name="users" className="h-12 w-12 text-green-500" />
+              </div>
+              <h3 class="text-xl font-semibold mb-3">Community Owned</h3>
+              <p class="text-gray-400">
+                Open source, community driven. No corporate overlords deciding what you can or cannot host.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="container mx-auto px-4 py-16">
+          <div class="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-12 text-center border border-purple-500/30">
+            <h2 class="text-3xl font-bold mb-4">Ready to get started?</h2>
+            <p class="text-gray-400 mb-8 text-lg">
+              Explore decentralized repositories on the Nostr network
+            </p>
+            <a
+              href="#explore"
+              class="inline-block px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-lg font-semibold transition-all duration-200 hover:scale-105"
+            >
+              Browse Repositories
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // About Page Component
+    const AboutPage = () => html`
+      <div class="min-h-screen">
+        <div class="container mx-auto px-4 py-16 max-w-4xl">
+          <h1 class="text-5xl font-bold mb-8 bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+            About NostrGit
+          </h1>
+
+          <div class="prose prose-invert max-w-none space-y-6 text-gray-300">
+            <p class="text-xl leading-relaxed">
+              NostrGit is a decentralized alternative to centralized code hosting platforms, built on the Nostr protocol.
+            </p>
+
+            <div class="bg-dark border border-lightgray rounded-lg p-6 my-8">
+              <h2 class="text-2xl font-bold mb-4 text-white">What is Nostr?</h2>
+              <p class="text-gray-400">
+                Nostr (Notes and Other Stuff Transmitted by Relays) is a simple, open protocol that enables truly censorship-resistant
+                global networks. It uses cryptographic keys and signatures to ensure authenticity and enables anyone to run a relay.
+              </p>
+            </div>
+
+            <h2 class="text-3xl font-bold mt-12 mb-4 text-white">The Problem</h2>
+            <p>
+              Traditional code hosting platforms are centralized, which means:
+            </p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+              <li>They can censor or remove repositories at will</li>
+              <li>They control who can access what</li>
+              <li>They can be subject to government takedown requests</li>
+              <li>If the platform shuts down, your code hosting is gone</li>
+            </ul>
+
+            <h2 class="text-3xl font-bold mt-12 mb-4 text-white">The Solution</h2>
+            <p>
+              NostrGit leverages the Nostr protocol to create a truly decentralized code hosting solution:
+            </p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+              <li>Repositories are announced as Nostr events (NIP-34)</li>
+              <li>Multiple relays host the same information</li>
+              <li>No single point of failure</li>
+              <li>Cryptographic verification ensures authenticity</li>
+              <li>Anyone can run a relay and participate</li>
+            </ul>
+
+            <div class="bg-purple-900/20 border border-purple-500/30 rounded-lg p-6 my-8">
+              <h2 class="text-2xl font-bold mb-4 text-white">NIP-34: Git Repository Announcements</h2>
+              <p class="text-gray-400">
+                NostrGit implements NIP-34, which defines how Git repositories are announced on Nostr using kind 30617 events.
+                These events contain repository metadata like name, description, clone URLs, maintainers, and more.
+              </p>
+            </div>
+
+            <h2 class="text-3xl font-bold mt-12 mb-4 text-white">Open Source</h2>
+            <p>
+              NostrGit is fully open source and community-driven. Check out the code on GitHub and contribute!
+            </p>
+
+            <div class="mt-12 pt-8 border-t border-lightgray">
+              <p class="text-sm text-gray-500">
+                Built with ❤️ by the Nostr community
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Docs Page Component (Stub)
+    const DocsPage = () => html`
+      <div class="min-h-screen">
+        <div class="container mx-auto px-4 py-16 max-w-4xl">
+          <h1 class="text-5xl font-bold mb-8 bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+            Documentation
+          </h1>
+
+          <div class="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-6 mb-8">
+            <div class="flex items-center gap-3 mb-2">
+              <${Icon} name="info" className="h-6 w-6 text-yellow-500" />
+              <h2 class="text-xl font-semibold text-yellow-400">Under Construction</h2>
+            </div>
+            <p class="text-gray-400">
+              Documentation is being written. Check back soon!
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+              <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                <${Icon} name="book" className="h-5 w-5 text-purple-500" />
+                Getting Started
+              </h3>
+              <p class="text-gray-400 mb-4">
+                Learn how to announce your repository on Nostr and get started with NostrGit.
+              </p>
+              <span class="text-sm text-purple-400">Coming soon...</span>
+            </div>
+
+            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+              <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                <${Icon} name="terminal" className="h-5 w-5 text-green-500" />
+                CLI Tools
+              </h3>
+              <p class="text-gray-400 mb-4">
+                Command-line tools for working with NostrGit repositories.
+              </p>
+              <span class="text-sm text-purple-400">Coming soon...</span>
+            </div>
+
+            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+              <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                <${Icon} name="gitBranch" className="h-5 w-5 text-blue-500" />
+                NIP-34 Spec
+              </h3>
+              <p class="text-gray-400 mb-4">
+                Technical specification for Git repository events on Nostr.
+              </p>
+              <a href="https://github.com/nostr-protocol/nips/blob/master/34.md" target="_blank" class="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1">
+                View on GitHub <${Icon} name="externalLink" className="h-3 w-3" />
+              </a>
+            </div>
+
+            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+              <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
+                <${Icon} name="users" className="h-5 w-5 text-yellow-500" />
+                Contributing
+              </h3>
+              <p class="text-gray-400 mb-4">
+                How to contribute to NostrGit development.
+              </p>
+              <span class="text-sm text-purple-400">Coming soon...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Repository Detail Modal Component
+    const RepoDetailModal = ({ repo, onClose }) => {
+      if (!repo) return null;
+
+      const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      };
+
+      const handleCopyClone = () => {
+        navigator.clipboard.writeText(`git clone ${repo.clone}`);
+      };
+
+      return html`
+        <div
+          class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+          onClick=${handleBackdropClick}
+        >
+          <div class="bg-dark border border-purple-500/30 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
+            <!-- Header -->
+            <div class="sticky top-0 bg-gradient-to-r from-purple-900/50 to-dark border-b border-purple-500/30 p-6 backdrop-blur-sm">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <h2 class="text-3xl font-bold text-white mb-2">${repo.name}</h2>
+                  ${repo.description ? html`
+                    <p class="text-gray-300 text-lg leading-relaxed">${repo.description}</p>
+                  ` : null}
+                </div>
+                <button
+                  onClick=${onClose}
+                  class="p-2 hover:bg-purple-500/20 rounded-lg transition-colors flex-shrink-0"
+                  title="Close"
+                >
+                  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+              <!-- Clone URL -->
+              ${repo.clone ? html`
+                <div class="bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] border border-purple-500/20 rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <${Icon} name="terminal" className="h-5 w-5 text-purple-400" />
+                    <h3 class="text-lg font-semibold text-white">Clone Repository</h3>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <code class="flex-1 px-4 py-3 bg-black/40 rounded font-mono text-sm border border-lightgray text-purple-300 break-all">
+                      git clone ${repo.clone}
+                    </code>
+                    <button
+                      onClick=${handleCopyClone}
+                      class="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all"
+                      title="Copy to clipboard"
+                    >
+                      <${Icon} name="copy" className="h-5 w-5 text-purple-400" />
+                    </button>
+                  </div>
+                </div>
+              ` : null}
+
+              <!-- Website -->
+              ${repo.web ? html`
+                <div class="bg-dark border border-lightgray rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <${Icon} name="globe" className="h-5 w-5 text-blue-400" />
+                    <h3 class="text-lg font-semibold text-white">Website</h3>
+                  </div>
+                  <a
+                    href=${repo.web}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 rounded-lg text-blue-300 hover:text-blue-200 transition-all"
+                  >
+                    <span class="break-all">${repo.web}</span>
+                    <${Icon} name="externalLink" className="h-4 w-4 flex-shrink-0" />
+                  </a>
+                </div>
+              ` : null}
+
+              <!-- Topics -->
+              ${repo.topics && repo.topics.length > 0 ? html`
+                <div class="bg-dark border border-lightgray rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <${Icon} name="tag" className="h-5 w-5 text-purple-400" />
+                    <h3 class="text-lg font-semibold text-white">Topics</h3>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    ${repo.topics.map(topic => html`
+                      <span class="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm text-purple-300">
+                        ${topic}
+                      </span>
+                    `)}
+                  </div>
+                </div>
+              ` : null}
+
+              <!-- Maintainers -->
+              ${repo.maintainers && repo.maintainers.length > 0 ? html`
+                <div class="bg-dark border border-lightgray rounded-lg p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <${Icon} name="users" className="h-5 w-5 text-green-400" />
+                    <h3 class="text-lg font-semibold text-white">Maintainers</h3>
+                  </div>
+                  <div class="space-y-2">
+                    ${repo.maintainers.map(maintainer => html`
+                      <a
+                        href=${`https://nostr.eu/${maintainer}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center gap-3 px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 rounded-lg transition-all group"
+                      >
+                        <${Icon} name="user" className="h-4 w-4 text-blue-400" />
+                        <code class="flex-1 font-mono text-sm text-blue-300 break-all">${maintainer}</code>
+                        <${Icon} name="externalLink" className="h-4 w-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                    `)}
+                  </div>
+                </div>
+              ` : null}
+
+              <!-- Metadata -->
+              <div class="bg-dark border border-lightgray rounded-lg p-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <${Icon} name="info" className="h-5 w-5 text-gray-400" />
+                  <h3 class="text-lg font-semibold text-white">Metadata</h3>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex items-center gap-3">
+                    <${Icon} name="calendar" className="h-4 w-4 text-gray-400" />
+                    <span class="text-sm text-gray-400">Created:</span>
+                    <span class="text-sm text-white font-mono">
+                      ${new Date(repo.created_at * 1000).toLocaleString()}
+                    </span>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <${Icon} name="user" className="h-4 w-4 text-gray-400 mt-0.5" />
+                    <span class="text-sm text-gray-400">Owner:</span>
+                    <a
+                      href=${`https://nostr.eu/${repo.pubkey}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="flex-1 font-mono text-sm text-purple-300 hover:text-purple-200 break-all transition-colors"
+                    >
+                      ${repo.pubkey}
+                    </a>
+                  </div>
+                  ${repo.identifier ? html`
+                    <div class="flex items-center gap-3">
+                      <${Icon} name="tag" className="h-4 w-4 text-gray-400" />
+                      <span class="text-sm text-gray-400">Identifier:</span>
+                      <code class="text-sm text-white font-mono">${repo.identifier}</code>
+                    </div>
+                  ` : null}
+                  <div class="flex items-center gap-3">
+                    <${Icon} name="zap" className="h-4 w-4 text-gray-400" />
+                    <span class="text-sm text-gray-400">Event ID:</span>
+                    <code class="flex-1 text-sm text-gray-300 font-mono break-all">${repo.id}</code>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // [PREVIOUS EXPLORE PAGE CODE GOES HERE - keeping it exactly as before]
+    class ExplorePage extends Component {
+      constructor() {
+        super();
+        this.state = {
+          repos: [],
+          loading: true,
+          connectedRelays: 0,
+          eventCount: 0,
+          activeFilter: 'all',
+          copiedId: null,
+          selectedRepo: null,
+          searchQuery: ''
+        };
+        this.websockets = [];
+        this.seenEvents = new Set();
+        this.connectedRelayUrls = new Set();
+      }
+
+      componentDidMount() {
+        const relays = [
+          'wss://relay.nostr.net/',
+          'wss://nos.lol/',
+          'wss://relay.damus.io/',
+          'wss://nostr.wine/',
+          'wss://relay.snort.social/',
+          'wss://nostr.mom/',
+          'wss://relay.nostr.band/',
+          'wss://purplepag.es/',
+          'wss://offchain.pub/',
+        ];
+
+        relays.forEach((relayUrl, index) => {
+          try {
+            const ws = new WebSocket(relayUrl);
+
+            ws.onopen = () => {
+              if (!this.connectedRelayUrls.has(relayUrl)) {
+                this.connectedRelayUrls.add(relayUrl);
+                this.setState({ connectedRelays: this.connectedRelayUrls.size });
+              }
+
+              const subscription = JSON.stringify([
+                'REQ',
+                `explore-${index}`,
+                {
+                  kinds: [30617],
+                  limit: 50,
+                },
+              ]);
+              ws.send(subscription);
+            };
+
+            ws.onmessage = (event) => {
+              try {
+                const message = JSON.parse(event.data);
+
+                if (message[0] === 'EVENT' && message[2]) {
+                  const nostrEvent = message[2];
+
+                  if (this.seenEvents.has(nostrEvent.id)) {
+                    return;
+                  }
+                  this.seenEvents.add(nostrEvent.id);
+
+                  if (nostrEvent.kind === 30617) {
+                    const repoInfo = this.parseRepoInfo(nostrEvent);
+
+                    this.setState(prevState => {
+                      const exists = prevState.repos.some(
+                        r => r.pubkey === repoInfo.pubkey && r.name === repoInfo.name
+                      );
+
+                      if (exists) return prevState;
+
+                      const updated = [...prevState.repos, repoInfo];
+                      return {
+                        repos: updated.sort((a, b) => b.created_at - a.created_at),
+                        eventCount: prevState.eventCount + 1,
+                        loading: false
+                      };
+                    });
+                  }
+                } else if (message[0] === 'EOSE') {
+                  this.setState({ loading: false });
+                }
+              } catch (err) {
+                console.error('Error parsing message:', err);
+              }
+            };
+
+            ws.onerror = () => {
+              console.error(`Failed to connect to ${relayUrl}`);
+            };
+
+            ws.onclose = () => {
+              if (this.connectedRelayUrls.has(relayUrl)) {
+                this.connectedRelayUrls.delete(relayUrl);
+                this.setState({ connectedRelays: this.connectedRelayUrls.size });
+              }
+            };
+
+            this.websockets.push(ws);
+          } catch (err) {
+            console.error(`Error connecting to ${relayUrl}:`, err);
+          }
+        });
+      }
+
+      componentWillUnmount() {
+        this.connectedRelayUrls.clear();
+        this.websockets.forEach(ws => {
+          if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+          }
+        });
+      }
+
+      parseRepoInfo(event) {
+        const tags = event.tags || [];
+        const info = {
+          id: event.id,
+          name: '',
+          description: '',
+          web: undefined,
+          clone: undefined,
+          maintainers: [],
+          created_at: event.created_at,
+          pubkey: event.pubkey,
+          topics: [],
+          identifier: undefined,
+        };
+
+        tags.forEach(tag => {
+          const [key, value] = tag;
+
+          switch (key) {
+            case 'name':
+              info.name = value || '';
+              break;
+            case 'd':
+              info.identifier = value || '';
+              if (!info.name) info.name = value || '';
+              break;
+            case 'description':
+              info.description = value || '';
+              break;
+            case 'web':
+              info.web = value;
+              break;
+            case 'clone':
+              info.clone = value;
+              break;
+            case 'p':
+              if (value) info.maintainers.push(value);
+              break;
+            case 't':
+              if (value) info.topics.push(value);
+              break;
+          }
+        });
+
+        if (!info.description && event.content) {
+          info.description = event.content;
+        }
+
+        if (!info.name) {
+          info.name = `Repo by ${event.pubkey.substring(0, 8)}`;
+        }
+
+        return info;
+      }
+
+      formatDate(timestamp) {
+        const now = Date.now() / 1000;
+        const diff = now - timestamp;
+
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
+
+        return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      }
+
+      handleCopyClone(cloneUrl, repoId) {
+        navigator.clipboard.writeText(`git clone ${cloneUrl}`).then(() => {
+          this.setState({ copiedId: repoId });
+          setTimeout(() => this.setState({ copiedId: null }), 2000);
+        }).catch(err => {
+          console.error('Failed to copy:', err);
+        });
+      }
+
+      render() {
+        const { repos, loading, connectedRelays, eventCount, activeFilter, copiedId, selectedRepo, searchQuery } = this.state;
+
+        // Filter repos based on search query
+        const filteredRepos = repos.filter(repo => {
+          if (!searchQuery) return true;
+          const query = searchQuery.toLowerCase();
+          return (
+            repo.name.toLowerCase().includes(query) ||
+            repo.description.toLowerCase().includes(query) ||
+            (repo.topics && repo.topics.some(topic => topic.toLowerCase().includes(query)))
+          );
+        });
+
+        return html`
+          <div class="min-h-screen">
+            <!-- Hero Section -->
+            <div class="relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-dark to-dark border-b border-lightgray">
+              <div class="container mx-auto px-4 py-16 relative">
+                <div class="flex items-center gap-3 mb-4">
+                  <${Icon} name="zap" className="h-8 w-8 text-purple-500" />
+                  <h1 class="text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-500 bg-clip-text text-transparent">
+                    Explore Projects
+                  </h1>
+                </div>
+                <p class="text-xl text-gray-400 max-w-2xl">
+                  Discover decentralized repositories announced on the Nostr network
+                </p>
+
+                <!-- Stats Bar -->
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-400">Connected Relays</p>
+                        <p class="text-2xl font-bold text-white">${connectedRelays}/9</p>
+                      </div>
+                      <div class="${connectedRelays > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-500'} w-3 h-3 rounded-full"></div>
+                    </div>
+                  </div>
+
+                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-400">Repositories</p>
+                        <p class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+                          ${repos.length}
+                        </p>
+                      </div>
+                      <${Icon} name="trendingUp" className="h-6 w-6 text-purple-500" />
+                    </div>
+                  </div>
+
+                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm text-gray-400">Events Received</p>
+                        <p class="text-2xl font-bold text-white">${eventCount}</p>
+                      </div>
+                      <${Icon} name="clock" className="h-6 w-6 text-blue-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="container mx-auto px-4 py-8">
+              <!-- Search Bar -->
+              <div class="mb-6">
+                <div class="relative max-w-2xl">
+                  <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search repositories by name, description, or topic..."
+                    value=${this.state.searchQuery}
+                    onInput=${(e) => this.setState({ searchQuery: e.target.value })}
+                    class="w-full pl-12 pr-4 py-3 bg-dark border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                  />
+                  ${this.state.searchQuery ? html`
+                    <button
+                      onClick=${() => this.setState({ searchQuery: '' })}
+                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  ` : null}
+                </div>
+              </div>
+
+              <!-- Filter Tabs -->
+              <div class="mb-6 flex items-center gap-2">
+                <button
+                  onClick=${() => this.setState({ activeFilter: 'all' })}
+                  class="${activeFilter === 'all' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                >
+                  All
+                </button>
+                <button
+                  onClick=${() => this.setState({ activeFilter: 'trending' })}
+                  class="${activeFilter === 'trending' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                >
+                  <${Icon} name="trendingUp" className="h-4 w-4 mr-1" />
+                  Trending
+                </button>
+                <button
+                  onClick=${() => this.setState({ activeFilter: 'new' })}
+                  class="${activeFilter === 'new' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                >
+                  <${Icon} name="zap" className="h-4 w-4 mr-1" />
+                  New
+                </button>
+              </div>
+
+              <!-- Loading State -->
+              ${loading && repos.length === 0 ? html`
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  ${[1, 2, 3, 4].map(i => html`
+                    <div key=${i} class="bg-dark border border-lightgray rounded-lg p-6 animate-pulse">
+                      <div class="h-6 bg-lightgray rounded w-3/4 mb-4"></div>
+                      <div class="h-4 bg-lightgray rounded w-full mb-2"></div>
+                      <div class="h-4 bg-lightgray rounded w-2/3"></div>
+                    </div>
+                  `)}
+                </div>
+              ` : null}
+
+              <!-- Repository Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${filteredRepos.map((repo, index) => html`
+                  <div
+                    key=${repo.id}
+                    onClick=${() => this.setState({ selectedRepo: repo })}
+                    class="group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:scale-[1.02] rounded-lg border shadow-sm fade-in cursor-pointer"
+                    style="animation-delay: ${index * 0.05}s"
+                  >
+                    <!-- Repo Header -->
+                    <div class="mb-4">
+                      <div class="flex items-start justify-between gap-2 mb-2">
+                        <h3 class="text-xl font-semibold text-white group-hover:text-purple-400 transition-colors line-clamp-1 flex-1">
+                          ${repo.name}
+                        </h3>
+                      </div>
+
+                      ${repo.description ? html`
+                        <p class="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-3">
+                          ${repo.description}
+                        </p>
+                      ` : null}
+
+                      <!-- Topics -->
+                      ${repo.topics && repo.topics.length > 0 ? html`
+                        <div class="flex flex-wrap gap-1.5 mb-3">
+                          ${repo.topics.slice(0, 5).map(topic => html`
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-md text-xs text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/40 transition-colors cursor-default">
+                              <${Icon} name="tag" className="h-3 w-3" />
+                              ${topic}
+                            </span>
+                          `)}
+                        </div>
+                      ` : null}
+
+                      <!-- Website Button -->
+                      ${repo.web ? html`
+                        <a
+                          href=${repo.web}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 hover:border-purple-500/50 rounded-lg text-sm text-purple-300 hover:text-purple-200 transition-all duration-200 hover:scale-[1.02] group/web"
+                        >
+                          <${Icon} name="globe" className="h-3.5 w-3.5" />
+                          <span>Visit Website</span>
+                          <${Icon} name="externalLink" className="h-3 w-3 opacity-50" />
+                        </a>
+                      ` : null}
+                    </div>
+
+                    <!-- Repo Metadata -->
+                    <div class="space-y-3 text-sm">
+                      <div class="flex items-center gap-4 text-gray-500">
+                        <div class="flex items-center gap-1">
+                          <${Icon} name="calendar" className="h-4 w-4" />
+                          <span>${this.formatDate(repo.created_at)}</span>
+                        </div>
+
+                        ${repo.maintainers.length > 0 ? html`
+                          <div class="flex items-center gap-1.5">
+                            <${Icon} name="users" className="h-4 w-4" />
+                            <div class="flex items-center gap-1">
+                              ${repo.maintainers.slice(0, 3).map(maintainer => html`
+                                <a
+                                  href=${`https://nostr.eu/${maintainer}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded hover:bg-blue-500/20 hover:border-blue-500/40 transition-colors group/maintainer"
+                                  title=${`Maintainer: ${maintainer.substring(0, 16)}...`}
+                                >
+                                  <${Icon} name="user" className="h-3 w-3 text-blue-400 group-hover/maintainer:text-blue-300" />
+                                  <span class="text-xs text-blue-300 font-mono">${maintainer.substring(0, 8)}</span>
+                                </a>
+                              `)}
+                              ${repo.maintainers.length > 3 ? html`
+                                <span class="text-xs text-gray-500">+${repo.maintainers.length - 3}</span>
+                              ` : null}
+                            </div>
+                          </div>
+                        ` : null}
+                      </div>
+
+                      ${repo.clone ? html`
+                        <div class="group/clone relative">
+                          <div class="p-3 bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] rounded-lg border border-lightgray hover:border-purple-500/30 transition-all duration-300">
+                            <div class="flex items-start justify-between gap-2">
+                              <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1.5">
+                                  <${Icon} name="terminal" className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
+                                  <span class="text-[10px] font-semibold text-purple-400 uppercase tracking-wider">
+                                    Clone Repository
+                                  </span>
+                                </div>
+                                <div class="text-xs font-mono break-all leading-relaxed">
+                                  <span class="text-gray-500 select-none">$</span>
+                                  <span class="text-green-400">git</span>
+                                  <span class="text-blue-400">clone</span>
+                                  <span class="text-purple-300">${repo.clone}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick=${() => this.handleCopyClone(repo.clone, repo.id)}
+                                class="flex-shrink-0 p-2 rounded-md bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200 group/btn"
+                                title="Copy clone command"
+                              >
+                                ${copiedId === repo.id
+                                  ? html`<${Icon} name="check" className="h-3.5 w-3.5 text-green-400" />`
+                                  : html`<${Icon} name="copy" className="h-3.5 w-3.5 text-purple-400 group-hover/btn:text-purple-300" />`
+                                }
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ` : null}
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="mt-4 pt-4 border-t border-lightgray">
+                      <a
+                        href=${`https://nostr.eu/${repo.pubkey}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-xs text-gray-500 hover:text-purple-400 font-mono flex items-center gap-2 transition-colors group/owner"
+                        title=${`Repository owner: ${repo.pubkey}`}
+                      >
+                        <div class="w-2 h-2 rounded-full bg-purple-500/50 group-hover/owner:bg-purple-500 transition-colors"></div>
+                        <span class="flex items-center gap-1">
+                          <${Icon} name="user" className="h-3 w-3" />
+                          <span>Owner:</span>
+                        </span>
+                        <span class="text-purple-400 group-hover/owner:text-purple-300">${repo.pubkey.substring(0, 16)}...</span>
+                        <${Icon} name="externalLink" className="h-2.5 w-2.5 opacity-0 group-hover/owner:opacity-50 transition-opacity" />
+                      </a>
+                    </div>
+                  </div>
+                `)}
+              </div>
+
+              <!-- Empty State -->
+              ${!loading && repos.length === 0 ? html`
+                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
+                  <${Icon} name="zap" className="h-16 w-16 text-purple-500 mx-auto mb-4 opacity-50" />
+                  <h3 class="text-xl font-semibold mb-2 text-white">
+                    No repositories found yet
+                  </h3>
+                  <p class="text-gray-400">
+                    Listening for repository announcements on the Nostr network...
+                  </p>
+                  <div class="mt-4">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
+                  </div>
+                </div>
+              ` : null}
+
+              <!-- No Search Results -->
+              ${!loading && repos.length > 0 && filteredRepos.length === 0 ? html`
+                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
+                  <svg class="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <h3 class="text-xl font-semibold mb-2 text-white">
+                    No repositories match your search
+                  </h3>
+                  <p class="text-gray-400">
+                    Try adjusting your search query
+                  </p>
+                  <button
+                    onClick=${() => this.setState({ searchQuery: '' })}
+                    class="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              ` : null}
+            </div>
+
+            <!-- Repository Detail Modal -->
+            ${selectedRepo ? html`
+              <${RepoDetailModal}
+                repo=${selectedRepo}
+                onClose=${() => this.setState({ selectedRepo: null })}
+              />
+            ` : null}
+          </div>
+        `;
+      }
+    }
+
+    // Main App Component with Routing
+    class App extends Component {
+      constructor() {
+        super();
+        this.state = {
+          currentPage: window.location.hash.slice(1) || ''
+        };
+      }
+
+      componentDidMount() {
+        window.addEventListener('hashchange', () => {
+          this.setState({ currentPage: window.location.hash.slice(1) || '' });
+        });
+      }
+
+      render() {
+        const { currentPage } = this.state;
+
+        let PageComponent;
+        switch (currentPage) {
+          case 'explore':
+            PageComponent = ExplorePage;
+            break;
+          case 'about':
+            PageComponent = AboutPage;
+            break;
+          case 'docs':
+            PageComponent = DocsPage;
+            break;
+          default:
+            PageComponent = HomePage;
+        }
+
+        return html`
+          <div>
+            <${Navigation} currentPage=${currentPage} />
+            <${PageComponent} />
+          </div>
+        `;
+      }
+    }
+
+    render(html`<${App} />`, document.getElementById('app'));
+  </script>
+
+  <!-- Service Worker Registration for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful:', registration.scope);
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed:', err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
