@@ -2102,6 +2102,116 @@
         if (savedPubkey && window.nostr) {
           this.setState({ nostrPubkey: savedPubkey });
         }
+
+        // Fetch issues from Nostr relays
+        this.fetchIssues();
+      }
+
+      fetchIssues() {
+        const relays = [
+          'wss://relay.nostr.net/',
+          'wss://nos.lol/',
+          'wss://relay.damus.io/',
+          'wss://nostr.wine/',
+          'wss://relay.snort.social/',
+        ];
+
+        const seenEvents = new Set();
+        const issueReplies = new Map();
+
+        relays.forEach((relayUrl, index) => {
+          try {
+            const ws = new WebSocket(relayUrl);
+
+            ws.onopen = () => {
+              // Subscribe to issues (kind 30618)
+              ws.send(JSON.stringify([
+                'REQ',
+                `app-issues-${index}`,
+                { kinds: [30618], limit: 100 }
+              ]));
+
+              // Subscribe to replies (kind 1621)
+              ws.send(JSON.stringify([
+                'REQ',
+                `app-replies-${index}`,
+                { kinds: [1621], limit: 200 }
+              ]));
+            };
+
+            ws.onmessage = (event) => {
+              try {
+                const message = JSON.parse(event.data);
+
+                if (message[0] === 'EVENT') {
+                  const nostrEvent = message[2];
+
+                  if (seenEvents.has(nostrEvent.id)) return;
+                  seenEvents.add(nostrEvent.id);
+
+                  if (nostrEvent.kind === 30618) {
+                    // Issue event
+                    const titleTag = nostrEvent.tags.find(t => t[0] === 'title');
+                    const statusTag = nostrEvent.tags.find(t => t[0] === 'status');
+                    const aTag = nostrEvent.tags.find(t => t[0] === 'a');
+                    const dTag = nostrEvent.tags.find(t => t[0] === 'd');
+
+                    const issue = {
+                      id: nostrEvent.id,
+                      pubkey: nostrEvent.pubkey,
+                      created_at: nostrEvent.created_at,
+                      title: titleTag ? titleTag[1] : 'Untitled',
+                      content: nostrEvent.content,
+                      status: statusTag ? statusTag[1] : 'open',
+                      repository: aTag ? aTag[1] : null,
+                      identifier: dTag ? dTag[1] : nostrEvent.id,
+                      replies: []
+                    };
+
+                    this.setState(prevState => {
+                      const exists = prevState.issues.some(i => i.id === issue.id);
+                      if (exists) return {};
+                      return { issues: [...prevState.issues, issue] };
+                    });
+                  } else if (nostrEvent.kind === 1621) {
+                    // Reply event
+                    const eTag = nostrEvent.tags.find(t => t[0] === 'e');
+                    if (eTag) {
+                      const issueId = eTag[1];
+                      const reply = {
+                        id: nostrEvent.id,
+                        pubkey: nostrEvent.pubkey,
+                        created_at: nostrEvent.created_at,
+                        content: nostrEvent.content
+                      };
+
+                      if (!issueReplies.has(issueId)) {
+                        issueReplies.set(issueId, []);
+                      }
+                      issueReplies.get(issueId).push(reply);
+
+                      // Update issues with replies
+                      this.setState(prevState => ({
+                        issues: prevState.issues.map(issue => {
+                          if (issue.id === issueId || issue.identifier === issueId) {
+                            return { ...issue, replies: issueReplies.get(issueId) };
+                          }
+                          return issue;
+                        })
+                      }));
+                    }
+                  }
+                }
+              } catch (err) {
+                console.error('Error parsing message:', err);
+              }
+            };
+
+            ws.onerror = () => console.error(`Failed to connect to ${relayUrl}`);
+          } catch (err) {
+            console.error(`Error connecting to ${relayUrl}:`, err);
+          }
+        });
       }
 
       async connectNostr() {
