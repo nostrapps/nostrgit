@@ -13,8 +13,25 @@
       theme: {
         extend: {
           colors: {
-            lightgray: "#383B42",
-            dark: "#22262C",
+            'gh-canvas-default': '#ffffff',
+            'gh-canvas-subtle': '#f6f8fa',
+            'gh-canvas-inset': '#f6f8fa',
+            'gh-border-default': '#d0d7de',
+            'gh-border-muted': '#d8dee4',
+            'gh-fg-default': '#24292f',
+            'gh-fg-muted': '#57606a',
+            'gh-fg-subtle': '#6e7781',
+            'gh-accent-fg': '#0969da',
+            'gh-accent-emphasis': '#0969da',
+            'gh-success-fg': '#1a7f37',
+            'gh-success-emphasis': '#2da44e',
+            'gh-danger-fg': '#cf222e',
+            'gh-attention-fg': '#9a6700',
+            'gh-btn-bg': '#f6f8fa',
+            'gh-btn-border': 'rgba(27,31,36,0.15)',
+            'gh-btn-hover-bg': '#f3f4f6',
+            'gh-btn-hover-border': 'rgba(27,31,36,0.15)',
+            'gh-btn-active-bg': 'hsla(220,14%,93%,1)',
           }
         }
       }
@@ -38,9 +55,10 @@
       animation: fadeIn 0.2s ease-out;
     }
     body {
-      background: #0E1116;
-      color: white;
+      background: #ffffff;
+      color: #24292f;
       min-height: 100vh;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     }
   </style>
 </head>
@@ -88,12 +106,12 @@
       ];
 
       return html`
-        <nav class="border-b border-lightgray bg-dark/50 backdrop-blur-sm sticky top-0 z-50">
+        <nav class="border-b border-gh-border-default bg-gh-canvas-default sticky top-0 z-50">
           <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
               <div class="flex items-center gap-2">
-                <${Icon} name="gitBranch" className="h-8 w-8 text-purple-500" />
-                <span class="text-2xl font-bold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+                <${Icon} name="gitBranch" className="h-8 w-8 text-gh-fg-default" />
+                <span class="text-xl font-semibold text-gh-fg-default">
                   NostrGit
                 </span>
               </div>
@@ -102,7 +120,7 @@
                   ${navItems.map(item => html`
                     <a
                       href=${`#${item.path}`}
-                      class="${currentPage === item.path ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white hover:bg-dark'} px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                      class="${currentPage === item.path ? 'text-gh-fg-default font-semibold border-b-2 border-b-[#fd8c73]' : 'text-gh-fg-muted hover:text-gh-fg-default hover:bg-gh-canvas-subtle'} px-3 py-2 rounded-md transition-all duration-200 flex items-center gap-2 text-sm"
                     >
                       <${Icon} name=${item.icon} className="h-4 w-4" />
                       ${item.name}
@@ -111,12 +129,12 @@
                 </div>
 
                 ${nostrPubkey ? html`
-                  <div class="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-lg">
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span class="text-sm text-green-300 font-mono">${nostrPubkey.substring(0, 8)}...</span>
+                  <div class="flex items-center gap-2 px-3 py-1.5 bg-[#ddf4ff] border border-[#54aeff] rounded-md">
+                    <div class="w-2 h-2 rounded-full bg-gh-success-emphasis"></div>
+                    <span class="text-xs text-gh-fg-default font-mono">${nostrPubkey.substring(0, 8)}...</span>
                     <button
                       onClick=${onDisconnect}
-                      class="ml-2 text-xs text-gray-400 hover:text-white transition-colors"
+                      class="ml-2 text-xs text-gh-fg-muted hover:text-gh-fg-default transition-colors"
                       title="Disconnect"
                     >
                       ✕
@@ -126,7 +144,7 @@
                   <button
                     onClick=${onConnect}
                     disabled=${nostrConnecting}
-                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    class="px-3 py-1.5 bg-gh-success-emphasis hover:bg-[#2c974b] disabled:bg-gh-btn-bg disabled:text-gh-fg-muted disabled:cursor-not-allowed rounded-md text-sm font-medium text-gh-fg-default transition-colors flex items-center gap-2 shadow-sm"
                   >
                     ${nostrConnecting ? html`
                       <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -146,29 +164,29 @@
 
     // Home Page Component
     const HomePage = () => html`
-      <div class="min-h-screen">
+      <div class="min-h-screen bg-gh-canvas-default">
         <!-- Hero Section -->
-        <div class="relative overflow-hidden bg-gradient-to-br from-purple-900/30 via-dark to-dark border-b border-lightgray">
+        <div class="relative overflow-hidden bg-gh-canvas-subtle border-b border-gh-border-default">
           <div class="container mx-auto px-4 py-24 text-center">
             <div class="flex justify-center mb-6">
-              <${Icon} name="gitBranch" className="h-20 w-20 text-purple-500" />
+              <${Icon} name="gitBranch" className="h-20 w-20 text-gh-fg-default" />
             </div>
-            <h1 class="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-purple-500 bg-clip-text text-transparent">
+            <h1 class="text-5xl font-bold mb-6 text-gh-fg-default">
               Welcome to NostrGit
             </h1>
-            <p class="text-2xl text-gray-400 max-w-3xl mx-auto mb-12">
+            <p class="text-xl text-gh-fg-muted max-w-3xl mx-auto mb-12">
               A truly censorship-resistant alternative to GitHub that has a chance of working
             </p>
             <div class="flex justify-center gap-4">
               <a
                 href="#explore"
-                class="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-lg font-semibold transition-all duration-200 hover:scale-105"
+                class="px-6 py-3 bg-gh-success-emphasis hover:bg-[#2c974b] rounded-md text-sm font-medium text-gh-fg-default shadow-sm transition-colors"
               >
                 Explore Repositories
               </a>
               <a
                 href="#about"
-                class="px-8 py-4 bg-dark border border-lightgray hover:border-purple-500 rounded-lg text-lg font-semibold transition-all duration-200"
+                class="px-6 py-3 bg-gh-btn-bg border border-gh-btn-border hover:bg-gh-btn-hover-bg hover:border-gh-btn-hover-border rounded-md text-sm font-medium text-gh-fg-default shadow-sm transition-colors"
               >
                 Learn More
               </a>
@@ -178,32 +196,32 @@
 
         <!-- Features Section -->
         <div class="container mx-auto px-4 py-16">
-          <h2 class="text-4xl font-bold text-center mb-12">Why NostrGit?</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="p-6 bg-dark border border-lightgray rounded-lg hover:border-purple-500 transition-all duration-200">
+          <h2 class="text-3xl font-bold text-center mb-12 text-gh-fg-default">Why NostrGit?</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-6 bg-gh-canvas-default border border-gh-border-default rounded-md hover:shadow-md transition-shadow">
               <div class="mb-4">
-                <${Icon} name="zap" className="h-12 w-12 text-purple-500" />
+                <${Icon} name="zap" className="h-10 w-10 text-gh-accent-fg" />
               </div>
-              <h3 class="text-xl font-semibold mb-3">Decentralized</h3>
-              <p class="text-gray-400">
+              <h3 class="text-lg font-semibold mb-3 text-gh-fg-default">Decentralized</h3>
+              <p class="text-gh-fg-muted text-sm">
                 Built on Nostr protocol. No single point of failure or control. Your code, your control.
               </p>
             </div>
-            <div class="p-6 bg-dark border border-lightgray rounded-lg hover:border-purple-500 transition-all duration-200">
+            <div class="p-6 bg-gh-canvas-default border border-gh-border-default rounded-md hover:shadow-md transition-shadow">
               <div class="mb-4">
-                <${Icon} name="globe" className="h-12 w-12 text-blue-500" />
+                <${Icon} name="globe" className="h-10 w-10 text-gh-accent-fg" />
               </div>
-              <h3 class="text-xl font-semibold mb-3">Censorship Resistant</h3>
-              <p class="text-gray-400">
+              <h3 class="text-lg font-semibold mb-3 text-gh-fg-default">Censorship Resistant</h3>
+              <p class="text-gh-fg-muted text-sm">
                 No gatekeepers. No takedowns. Your repositories stay online as long as one relay exists.
               </p>
             </div>
-            <div class="p-6 bg-dark border border-lightgray rounded-lg hover:border-purple-500 transition-all duration-200">
+            <div class="p-6 bg-gh-canvas-default border border-gh-border-default rounded-md hover:shadow-md transition-shadow">
               <div class="mb-4">
-                <${Icon} name="users" className="h-12 w-12 text-green-500" />
+                <${Icon} name="users" className="h-10 w-10 text-gh-success-fg" />
               </div>
-              <h3 class="text-xl font-semibold mb-3">Community Owned</h3>
-              <p class="text-gray-400">
+              <h3 class="text-lg font-semibold mb-3 text-gh-fg-default">Community Owned</h3>
+              <p class="text-gh-fg-muted text-sm">
                 Open source, community driven. No corporate overlords deciding what you can or cannot host.
               </p>
             </div>
@@ -212,14 +230,14 @@
 
         <!-- CTA Section -->
         <div class="container mx-auto px-4 py-16">
-          <div class="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-12 text-center border border-purple-500/30">
-            <h2 class="text-3xl font-bold mb-4">Ready to get started?</h2>
-            <p class="text-gray-400 mb-8 text-lg">
+          <div class="bg-gh-canvas-subtle rounded-md p-12 text-center border border-gh-border-default">
+            <h2 class="text-2xl font-bold mb-4 text-gh-fg-default">Ready to get started?</h2>
+            <p class="text-gh-fg-muted mb-8">
               Explore decentralized repositories on the Nostr network
             </p>
             <a
               href="#explore"
-              class="inline-block px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-lg font-semibold transition-all duration-200 hover:scale-105"
+              class="inline-block px-6 py-3 bg-gh-success-emphasis hover:bg-[#2c974b] rounded-md text-sm font-medium text-gh-fg-default shadow-sm transition-colors"
             >
               Browse Repositories
             </a>
@@ -232,24 +250,24 @@
     const AboutPage = () => html`
       <div class="min-h-screen">
         <div class="container mx-auto px-4 py-16 max-w-4xl">
-          <h1 class="text-5xl font-bold mb-8 bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+          <h1 class="text-5xl font-bold mb-8 text-gh-fg-default">
             About NostrGit
           </h1>
 
-          <div class="prose prose-invert max-w-none space-y-6 text-gray-300">
+          <div class="prose prose-invert max-w-none space-y-6 text-gh-fg-default">
             <p class="text-xl leading-relaxed">
               NostrGit is a decentralized alternative to centralized code hosting platforms, built on the Nostr protocol.
             </p>
 
-            <div class="bg-dark border border-lightgray rounded-lg p-6 my-8">
-              <h2 class="text-2xl font-bold mb-4 text-white">What is Nostr?</h2>
-              <p class="text-gray-400">
+            <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 my-8">
+              <h2 class="text-2xl font-bold mb-4 text-gh-fg-default">What is Nostr?</h2>
+              <p class="text-gh-fg-muted">
                 Nostr (Notes and Other Stuff Transmitted by Relays) is a simple, open protocol that enables truly censorship-resistant
                 global networks. It uses cryptographic keys and signatures to ensure authenticity and enables anyone to run a relay.
               </p>
             </div>
 
-            <h2 class="text-3xl font-bold mt-12 mb-4 text-white">The Problem</h2>
+            <h2 class="text-3xl font-bold mt-12 mb-4 text-gh-fg-default">The Problem</h2>
             <p>
               Traditional code hosting platforms are centralized, which means:
             </p>
@@ -260,7 +278,7 @@
               <li>If the platform shuts down, your code hosting is gone</li>
             </ul>
 
-            <h2 class="text-3xl font-bold mt-12 mb-4 text-white">The Solution</h2>
+            <h2 class="text-3xl font-bold mt-12 mb-4 text-gh-fg-default">The Solution</h2>
             <p>
               NostrGit leverages the Nostr protocol to create a truly decentralized code hosting solution:
             </p>
@@ -272,21 +290,21 @@
               <li>Anyone can run a relay and participate</li>
             </ul>
 
-            <div class="bg-purple-900/20 border border-purple-500/30 rounded-lg p-6 my-8">
-              <h2 class="text-2xl font-bold mb-4 text-white">NIP-34: Git Repository Announcements</h2>
-              <p class="text-gray-400">
+            <div class="bg-purple-900/20 border border-gh-accent-emphasis/30 rounded-lg p-6 my-8">
+              <h2 class="text-2xl font-bold mb-4 text-gh-fg-default">NIP-34: Git Repository Announcements</h2>
+              <p class="text-gh-fg-muted">
                 NostrGit implements NIP-34, which defines how Git repositories are announced on Nostr using kind 30617 events.
                 These events contain repository metadata like name, description, clone URLs, maintainers, and more.
               </p>
             </div>
 
-            <h2 class="text-3xl font-bold mt-12 mb-4 text-white">Open Source</h2>
+            <h2 class="text-3xl font-bold mt-12 mb-4 text-gh-fg-default">Open Source</h2>
             <p>
               NostrGit is fully open source and community-driven. Check out the code on GitHub and contribute!
             </p>
 
-            <div class="mt-12 pt-8 border-t border-lightgray">
-              <p class="text-sm text-gray-500">
+            <div class="mt-12 pt-8 border-t border-gh-border-default">
+              <p class="text-sm text-gh-fg-subtle">
                 Built with ❤️ by the Nostr community
               </p>
             </div>
@@ -299,7 +317,7 @@
     const DocsPage = () => html`
       <div class="min-h-screen">
         <div class="container mx-auto px-4 py-16 max-w-4xl">
-          <h1 class="text-5xl font-bold mb-8 bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent">
+          <h1 class="text-5xl font-bold mb-8 text-gh-fg-default">
             Documentation
           </h1>
 
@@ -308,56 +326,56 @@
               <${Icon} name="info" className="h-6 w-6 text-yellow-500" />
               <h2 class="text-xl font-semibold text-yellow-400">Under Construction</h2>
             </div>
-            <p class="text-gray-400">
+            <p class="text-gh-fg-muted">
               Documentation is being written. Check back soon!
             </p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+            <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 hover:border-gh-accent-emphasis transition-all">
               <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
-                <${Icon} name="book" className="h-5 w-5 text-purple-500" />
+                <${Icon} name="book" className="h-5 w-5 text-gh-accent-fg" />
                 Getting Started
               </h3>
-              <p class="text-gray-400 mb-4">
+              <p class="text-gh-fg-muted mb-4">
                 Learn how to announce your repository on Nostr and get started with NostrGit.
               </p>
-              <span class="text-sm text-purple-400">Coming soon...</span>
+              <span class="text-sm text-gh-accent-fg">Coming soon...</span>
             </div>
 
-            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+            <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 hover:border-gh-accent-emphasis transition-all">
               <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
                 <${Icon} name="terminal" className="h-5 w-5 text-green-500" />
                 CLI Tools
               </h3>
-              <p class="text-gray-400 mb-4">
+              <p class="text-gh-fg-muted mb-4">
                 Command-line tools for working with NostrGit repositories.
               </p>
-              <span class="text-sm text-purple-400">Coming soon...</span>
+              <span class="text-sm text-gh-accent-fg">Coming soon...</span>
             </div>
 
-            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+            <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 hover:border-gh-accent-emphasis transition-all">
               <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
                 <${Icon} name="gitBranch" className="h-5 w-5 text-blue-500" />
                 NIP-34 Spec
               </h3>
-              <p class="text-gray-400 mb-4">
+              <p class="text-gh-fg-muted mb-4">
                 Technical specification for Git repository events on Nostr.
               </p>
-              <a href="https://github.com/nostr-protocol/nips/blob/master/34.md" target="_blank" class="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1">
+              <a href="https://github.com/nostr-protocol/nips/blob/master/34.md" target="_blank" class="text-sm text-gh-accent-fg hover:text-gh-accent-fg flex items-center gap-1">
                 View on GitHub <${Icon} name="externalLink" className="h-3 w-3" />
               </a>
             </div>
 
-            <div class="bg-dark border border-lightgray rounded-lg p-6 hover:border-purple-500 transition-all">
+            <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 hover:border-gh-accent-emphasis transition-all">
               <h3 class="text-xl font-semibold mb-3 flex items-center gap-2">
                 <${Icon} name="users" className="h-5 w-5 text-yellow-500" />
                 Contributing
               </h3>
-              <p class="text-gray-400 mb-4">
+              <p class="text-gh-fg-muted mb-4">
                 How to contribute to NostrGit development.
               </p>
-              <span class="text-sm text-purple-400">Coming soon...</span>
+              <span class="text-sm text-gh-accent-fg">Coming soon...</span>
             </div>
           </div>
         </div>
@@ -405,10 +423,10 @@
           return html`
             <div class="min-h-screen flex items-center justify-center">
               <div class="text-center">
-                <${Icon} name="alertCircle" className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-                <h2 class="text-2xl font-bold text-white mb-2">Repository not found</h2>
-                <p class="text-gray-400 mb-6">This repository could not be loaded</p>
-                <a href="#explore" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                <${Icon} name="alertCircle" className="h-16 w-16 text-gh-fg-subtle mx-auto mb-4" />
+                <h2 class="text-2xl font-bold text-gh-fg-default mb-2">Repository not found</h2>
+                <p class="text-gh-fg-muted mb-6">This repository could not be loaded</p>
+                <a href="#explore" class="px-4 py-2 bg-gh-accent-emphasis hover:bg-[#0860ca] rounded-lg transition-colors">
                   Back to Explore
                 </a>
               </div>
@@ -428,39 +446,39 @@
         return html`
           <div class="min-h-screen">
             <!-- Header -->
-            <div class="bg-gradient-to-br from-purple-900/20 via-dark to-dark border-b border-lightgray">
+            <div class="bg-gh-canvas-subtle border-b border-gh-border-default">
               <div class="container mx-auto px-4 py-8">
-                <div class="flex items-center gap-2 text-sm text-gray-400 mb-4">
-                  <a href="#explore" class="hover:text-purple-400 transition-colors">Explore</a>
+                <div class="flex items-center gap-2 text-sm text-gh-fg-muted mb-4">
+                  <a href="#explore" class="hover:text-gh-accent-fg transition-colors">Explore</a>
                   <${Icon} name="arrowRight" className="h-3 w-3" />
-                  <span class="text-white">${repo.name}</span>
+                  <span class="text-gh-fg-default">${repo.name}</span>
                 </div>
 
                 <div class="flex items-start justify-between gap-4 mb-6">
                   <div class="flex-1">
-                    <h1 class="text-4xl font-bold text-white mb-3">${repo.name}</h1>
+                    <h1 class="text-4xl font-bold text-gh-fg-default mb-3">${repo.name}</h1>
                     ${repo.description ? html`
-                      <p class="text-xl text-gray-300 leading-relaxed">${repo.description}</p>
+                      <p class="text-xl text-gh-fg-default leading-relaxed">${repo.description}</p>
                     ` : null}
                   </div>
                 </div>
 
                 <!-- Tab Navigation -->
-                <div class="flex items-center gap-2 border-b border-lightgray -mb-px">
+                <div class="flex items-center gap-2 border-b border-gh-border-default -mb-px">
                   <button
                     onClick=${() => this.setState({ activeTab: 'overview' })}
-                    class="${activeTab === 'overview' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'} px-4 py-3 border-b-2 font-medium transition-colors"
+                    class="${activeTab === 'overview' ? 'border-gh-accent-emphasis text-gh-fg-default' : 'border-transparent text-gh-fg-muted hover:text-gh-fg-default'} px-4 py-3 border-b-2 font-medium transition-colors"
                   >
                     Overview
                   </button>
                   <button
                     onClick=${() => this.setState({ activeTab: 'issues' })}
-                    class="${activeTab === 'issues' ? 'border-purple-500 text-white' : 'border-transparent text-gray-400 hover:text-white'} px-4 py-3 border-b-2 font-medium transition-colors flex items-center gap-2"
+                    class="${activeTab === 'issues' ? 'border-gh-accent-emphasis text-gh-fg-default' : 'border-transparent text-gh-fg-muted hover:text-gh-fg-default'} px-4 py-3 border-b-2 font-medium transition-colors flex items-center gap-2"
                   >
                     <${Icon} name="messageCircle" className="h-4 w-4" />
                     Issues
                     ${repoIssues.length > 0 ? html`
-                      <span class="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300">
+                      <span class="px-2 py-0.5 bg-purple-500/20 border border-gh-accent-emphasis/30 rounded-full text-xs text-gh-accent-fg">
                         ${repoIssues.length}
                       </span>
                     ` : null}
@@ -475,23 +493,23 @@
                 <div class="max-w-4xl space-y-6">
                   <!-- Clone URL -->
                   ${repo.clone ? html`
-                    <div class="bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] border border-purple-500/20 rounded-lg p-6">
+                    <div class="bg-gh-canvas-inset border border-gh-accent-emphasis/20 rounded-lg p-6">
                       <div class="flex items-center gap-2 mb-4">
-                        <${Icon} name="terminal" className="h-5 w-5 text-purple-400" />
-                        <h2 class="text-xl font-semibold text-white">Clone Repository</h2>
+                        <${Icon} name="terminal" className="h-5 w-5 text-gh-accent-fg" />
+                        <h2 class="text-xl font-semibold text-gh-fg-default">Clone Repository</h2>
                       </div>
                       <div class="flex items-center gap-2">
-                        <code class="flex-1 px-4 py-3 bg-black/40 rounded font-mono text-sm border border-lightgray text-purple-300 break-all">
+                        <code class="flex-1 px-4 py-3 bg-black/40 rounded font-mono text-sm border border-gh-border-default text-gh-accent-fg break-all">
                           git clone ${repo.clone}
                         </code>
                         <button
                           onClick=${() => this.handleCopyClone(repo.clone)}
-                          class="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded transition-all"
+                          class="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-gh-accent-emphasis/30 hover:border-gh-accent-emphasis/50 rounded transition-all"
                           title="Copy to clipboard"
                         >
                           ${copiedClone
                             ? html`<${Icon} name="check" className="h-5 w-5 text-green-400" />`
-                            : html`<${Icon} name="copy" className="h-5 w-5 text-purple-400" />`
+                            : html`<${Icon} name="copy" className="h-5 w-5 text-gh-accent-fg" />`
                           }
                         </button>
                       </div>
@@ -500,10 +518,10 @@
 
                   <!-- Website -->
                   ${repo.web ? html`
-                    <div class="bg-dark border border-lightgray rounded-lg p-6">
+                    <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6">
                       <div class="flex items-center gap-2 mb-4">
                         <${Icon} name="globe" className="h-5 w-5 text-blue-400" />
-                        <h2 class="text-xl font-semibold text-white">Website</h2>
+                        <h2 class="text-xl font-semibold text-gh-fg-default">Website</h2>
                       </div>
                       <a
                         href=${repo.web}
@@ -519,14 +537,14 @@
 
                   <!-- Topics -->
                   ${repo.topics && repo.topics.length > 0 ? html`
-                    <div class="bg-dark border border-lightgray rounded-lg p-6">
+                    <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6">
                       <div class="flex items-center gap-2 mb-4">
-                        <${Icon} name="tag" className="h-5 w-5 text-purple-400" />
-                        <h2 class="text-xl font-semibold text-white">Topics</h2>
+                        <${Icon} name="tag" className="h-5 w-5 text-gh-accent-fg" />
+                        <h2 class="text-xl font-semibold text-gh-fg-default">Topics</h2>
                       </div>
                       <div class="flex flex-wrap gap-2">
                         ${repo.topics.map(topic => html`
-                          <span class="px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm text-purple-300">
+                          <span class="px-3 py-1.5 bg-purple-500/10 border border-gh-accent-emphasis/30 rounded-lg text-sm text-gh-accent-fg">
                             ${topic}
                           </span>
                         `)}
@@ -536,10 +554,10 @@
 
                   <!-- Maintainers -->
                   ${repo.maintainers && repo.maintainers.length > 0 ? html`
-                    <div class="bg-dark border border-lightgray rounded-lg p-6">
+                    <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6">
                       <div class="flex items-center gap-2 mb-4">
                         <${Icon} name="users" className="h-5 w-5 text-green-400" />
-                        <h2 class="text-xl font-semibold text-white">Maintainers</h2>
+                        <h2 class="text-xl font-semibold text-gh-fg-default">Maintainers</h2>
                       </div>
                       <div class="space-y-2">
                         ${repo.maintainers.map(maintainer => html`
@@ -559,42 +577,42 @@
                   ` : null}
 
                   <!-- Metadata -->
-                  <div class="bg-dark border border-lightgray rounded-lg p-6">
+                  <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6">
                     <div class="flex items-center gap-2 mb-4">
-                      <${Icon} name="info" className="h-5 w-5 text-gray-400" />
-                      <h2 class="text-xl font-semibold text-white">Metadata</h2>
+                      <${Icon} name="info" className="h-5 w-5 text-gh-fg-muted" />
+                      <h2 class="text-xl font-semibold text-gh-fg-default">Metadata</h2>
                     </div>
                     <div class="space-y-3">
                       <div class="flex items-center gap-3">
-                        <${Icon} name="calendar" className="h-4 w-4 text-gray-400" />
-                        <span class="text-sm text-gray-400">Created:</span>
-                        <span class="text-sm text-white font-mono">
+                        <${Icon} name="calendar" className="h-4 w-4 text-gh-fg-muted" />
+                        <span class="text-sm text-gh-fg-muted">Created:</span>
+                        <span class="text-sm text-gh-fg-default font-mono">
                           ${new Date(repo.created_at * 1000).toLocaleString()}
                         </span>
                       </div>
                       <div class="flex items-start gap-3">
-                        <${Icon} name="user" className="h-4 w-4 text-gray-400 mt-0.5" />
-                        <span class="text-sm text-gray-400">Owner:</span>
+                        <${Icon} name="user" className="h-4 w-4 text-gh-fg-muted mt-0.5" />
+                        <span class="text-sm text-gh-fg-muted">Owner:</span>
                         <a
                           href=${`https://nostr.eu/${repo.pubkey}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="flex-1 font-mono text-sm text-purple-300 hover:text-purple-200 break-all transition-colors"
+                          class="flex-1 font-mono text-sm text-gh-accent-fg hover:text-purple-200 break-all transition-colors"
                         >
                           ${repo.pubkey}
                         </a>
                       </div>
                       ${repo.identifier ? html`
                         <div class="flex items-center gap-3">
-                          <${Icon} name="tag" className="h-4 w-4 text-gray-400" />
-                          <span class="text-sm text-gray-400">Identifier:</span>
-                          <code class="text-sm text-white font-mono">${repo.identifier}</code>
+                          <${Icon} name="tag" className="h-4 w-4 text-gh-fg-muted" />
+                          <span class="text-sm text-gh-fg-muted">Identifier:</span>
+                          <code class="text-sm text-gh-fg-default font-mono">${repo.identifier}</code>
                         </div>
                       ` : null}
                       <div class="flex items-center gap-3">
-                        <${Icon} name="zap" className="h-4 w-4 text-gray-400" />
-                        <span class="text-sm text-gray-400">Event ID:</span>
-                        <code class="flex-1 text-sm text-gray-300 font-mono break-all">${repo.id}</code>
+                        <${Icon} name="zap" className="h-4 w-4 text-gh-fg-muted" />
+                        <span class="text-sm text-gh-fg-muted">Event ID:</span>
+                        <code class="flex-1 text-sm text-gh-fg-default font-mono break-all">${repo.id}</code>
                       </div>
                     </div>
                   </div>
@@ -606,7 +624,7 @@
                     <div class="mb-6">
                       <button
                         onClick=${() => this.setState({ showNewIssue: true })}
-                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        class="px-4 py-2 bg-gh-accent-emphasis hover:bg-[#0860ca] rounded-lg font-medium transition-colors flex items-center gap-2"
                       >
                         <${Icon} name="messageCircle" className="h-4 w-4" />
                         New Issue
@@ -624,35 +642,35 @@
                       ${repoIssues.sort((a, b) => b.created_at - a.created_at).map(issue => html`
                         <a
                           href=${'#issues'}
-                          class="block group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 rounded-lg border"
+                          class="block group p-6 bg-gh-canvas-default border-gh-border-default hover:border-gh-accent-emphasis/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 rounded-lg border"
                         >
                           <div class="flex items-start gap-4">
                             <${Icon} name=${issue.status === 'closed' ? 'checkCircle' : 'alertCircle'}
-                              className=${`h-6 w-6 flex-shrink-0 mt-1 ${issue.status === 'closed' ? 'text-purple-500' : 'text-green-500'}`}
+                              className=${`h-6 w-6 flex-shrink-0 mt-1 ${issue.status === 'closed' ? 'text-gh-accent-fg' : 'text-green-500'}`}
                             />
 
                             <div class="flex-1 min-w-0">
                               <div class="flex items-start justify-between gap-4 mb-2">
-                                <h3 class="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors">
+                                <h3 class="text-lg font-semibold text-gh-fg-default group-hover:text-gh-accent-fg transition-colors">
                                   ${issue.title}
                                 </h3>
-                                <${Icon} name="arrowRight" className="h-5 w-5 text-gray-500 group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                                <${Icon} name="arrowRight" className="h-5 w-5 text-gh-fg-subtle group-hover:text-gh-accent-fg transition-colors flex-shrink-0" />
                               </div>
 
                               ${issue.content ? html`
-                                <p class="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-3">
+                                <p class="text-gh-fg-muted text-sm line-clamp-2 leading-relaxed mb-3">
                                   ${issue.content}
                                 </p>
                               ` : null}
 
-                              <div class="flex items-center gap-4 text-sm text-gray-500">
+                              <div class="flex items-center gap-4 text-sm text-gh-fg-subtle">
                                 <span class="flex items-center gap-1">
                                   <${Icon} name="calendar" className="h-3 w-3" />
                                   ${this.formatDate(issue.created_at)}
                                 </span>
 
                                 ${issue.replies && issue.replies.length > 0 ? html`
-                                  <span class="flex items-center gap-1 text-purple-400">
+                                  <span class="flex items-center gap-1 text-gh-accent-fg">
                                     <${Icon} name="messageCircle" className="h-3 w-3" />
                                     ${issue.replies.length}
                                   </span>
@@ -664,10 +682,10 @@
                       `)}
                     </div>
                   ` : html`
-                    <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg">
+                    <div class="text-center py-16 bg-gh-canvas-default/50 border border-gh-border-default rounded-lg">
                       <${Icon} name="messageCircle" className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 class="text-xl font-semibold text-white mb-2">No issues yet</h3>
-                      <p class="text-gray-400">
+                      <h3 class="text-xl font-semibold text-gh-fg-default mb-2">No issues yet</h3>
+                      <p class="text-gh-fg-muted">
                         This repository doesn't have any issues announced on Nostr
                       </p>
                     </div>
@@ -755,11 +773,11 @@
         return html`
           <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
                onClick=${(e) => e.target === e.currentTarget && onClose()}>
-            <div class="bg-dark border border-purple-500/30 rounded-lg max-w-2xl w-full shadow-2xl shadow-purple-500/20">
+            <div class="bg-gh-canvas-default border border-gh-accent-emphasis/30 rounded-lg max-w-2xl w-full shadow-2xl shadow-purple-500/20">
               <!-- Header -->
-              <div class="bg-gradient-to-r from-purple-900/50 to-dark border-b border-purple-500/30 p-6">
+              <div class="bg-gh-canvas-subtle border-b border-gh-accent-emphasis/30 p-6">
                 <div class="flex items-center justify-between">
-                  <h2 class="text-2xl font-bold text-white">New Issue</h2>
+                  <h2 class="text-2xl font-bold text-gh-fg-default">New Issue</h2>
                   <button
                     onClick=${onClose}
                     class="p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
@@ -781,7 +799,7 @@
                 ` : null}
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gh-fg-default mb-2">
                     Title *
                   </label>
                   <input
@@ -790,13 +808,13 @@
                     onInput=${(e) => this.setState({ title: e.target.value })}
                     disabled=${submitting}
                     placeholder="Brief description of the issue"
-                    class="w-full px-4 py-2 bg-black/40 border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+                    class="w-full px-4 py-2 bg-black/40 border border-gh-border-default rounded-lg text-gh-fg-default placeholder-gray-500 focus:outline-none focus:border-gh-accent-emphasis focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
                     required
                   />
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-2">
+                  <label class="block text-sm font-medium text-gh-fg-default mb-2">
                     Description
                   </label>
                   <textarea
@@ -805,7 +823,7 @@
                     disabled=${submitting}
                     placeholder="Detailed description of the issue..."
                     rows="8"
-                    class="w-full px-4 py-2 bg-black/40 border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50 resize-none"
+                    class="w-full px-4 py-2 bg-black/40 border border-gh-border-default rounded-lg text-gh-fg-default placeholder-gray-500 focus:outline-none focus:border-gh-accent-emphasis focus:ring-1 focus:ring-purple-500 disabled:opacity-50 resize-none"
                   ></textarea>
                 </div>
 
@@ -814,14 +832,14 @@
                     type="button"
                     onClick=${onClose}
                     disabled=${submitting}
-                    class="px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                    class="px-4 py-2 text-gh-fg-muted hover:text-gh-fg-default transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled=${submitting || !title.trim()}
-                    class="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+                    class="px-6 py-2 bg-gh-accent-emphasis hover:bg-[#0860ca] disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
                   >
                     ${submitting ? html`
                       <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -910,19 +928,19 @@
           class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
           onClick=${handleBackdropClick}
         >
-          <div class="bg-dark border border-purple-500/30 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
+          <div class="bg-gh-canvas-default border border-gh-accent-emphasis/30 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
             <!-- Header -->
-            <div class="sticky top-0 bg-gradient-to-r from-purple-900/50 to-dark border-b border-purple-500/30 p-6 backdrop-blur-sm">
+            <div class="sticky top-0 bg-gh-canvas-subtle border-b border-gh-accent-emphasis/30 p-6 backdrop-blur-sm">
               <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-2">
                     <${Icon} name=${issue.status === 'closed' ? 'checkCircle' : 'alertCircle'}
-                      className=${`h-6 w-6 ${issue.status === 'closed' ? 'text-purple-500' : 'text-green-500'}`}
+                      className=${`h-6 w-6 ${issue.status === 'closed' ? 'text-gh-accent-fg' : 'text-green-500'}`}
                     />
-                    <h2 class="text-2xl font-bold text-white">${issue.title}</h2>
+                    <h2 class="text-2xl font-bold text-gh-fg-default">${issue.title}</h2>
                   </div>
-                  <div class="flex items-center gap-4 text-sm text-gray-400">
-                    <span class="${issue.status === 'closed' ? 'text-purple-400' : 'text-green-400'} font-semibold">
+                  <div class="flex items-center gap-4 text-sm text-gh-fg-muted">
+                    <span class="${issue.status === 'closed' ? 'text-gh-accent-fg' : 'text-green-400'} font-semibold">
                       ${issue.status === 'closed' ? 'Closed' : 'Open'}
                     </span>
                     <span class="flex items-center gap-1">
@@ -946,71 +964,71 @@
             <!-- Content -->
             <div class="p-6">
               <!-- Issue Body -->
-              <div class="bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] border border-lightgray rounded-lg p-6 mb-6">
+              <div class="bg-gh-canvas-inset border border-gh-border-default rounded-lg p-6 mb-6">
                 <div class="flex items-center gap-3 mb-4">
                   <a
                     href=${`https://nostr.eu/${issue.pubkey}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors"
+                    class="flex items-center gap-2 text-sm text-gh-fg-muted hover:text-gh-accent-fg transition-colors"
                   >
                     <${Icon} name="user" className="h-4 w-4" />
                     <span class="font-mono">${issue.pubkey.substring(0, 16)}...</span>
                   </a>
                   <span class="text-gray-600">•</span>
-                  <span class="text-sm text-gray-500">
+                  <span class="text-sm text-gh-fg-subtle">
                     ${new Date(issue.created_at * 1000).toLocaleString()}
                   </span>
                 </div>
                 ${issue.content ? html`
                   <div class="prose prose-invert max-w-none">
-                    <p class="text-gray-300 whitespace-pre-wrap leading-relaxed">${issue.content}</p>
+                    <p class="text-gh-fg-default whitespace-pre-wrap leading-relaxed">${issue.content}</p>
                   </div>
-                ` : html`<p class="text-gray-500 italic">No description provided</p>`}
+                ` : html`<p class="text-gh-fg-subtle italic">No description provided</p>`}
               </div>
 
               <!-- Replies Section -->
               <div class="space-y-4">
-                <h3 class="text-lg font-semibold text-white flex items-center gap-2">
-                  <${Icon} name="messageCircle" className="h-5 w-5 text-purple-400" />
+                <h3 class="text-lg font-semibold text-gh-fg-default flex items-center gap-2">
+                  <${Icon} name="messageCircle" className="h-5 w-5 text-gh-accent-fg" />
                   Replies (${issue.replies ? issue.replies.length : 0})
                 </h3>
 
                 ${issue.replies && issue.replies.length > 0 ? html`
                   <div class="space-y-3">
                     ${issue.replies.sort((a, b) => a.created_at - b.created_at).map(reply => html`
-                      <div class="bg-dark border border-lightgray rounded-lg p-4 hover:border-purple-500/30 transition-all">
+                      <div class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-4 hover:border-gh-accent-emphasis/30 transition-all">
                         <div class="flex items-center gap-3 mb-3">
                           <a
                             href=${`https://nostr.eu/${reply.pubkey}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors"
+                            class="flex items-center gap-2 text-sm text-gh-fg-muted hover:text-gh-accent-fg transition-colors"
                           >
                             <${Icon} name="user" className="h-3 w-3" />
                             <span class="font-mono">${reply.pubkey.substring(0, 12)}...</span>
                           </a>
                           <span class="text-gray-600">•</span>
-                          <span class="text-xs text-gray-500">
+                          <span class="text-xs text-gh-fg-subtle">
                             ${new Date(reply.created_at * 1000).toLocaleString()}
                           </span>
                         </div>
-                        <p class="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">${reply.content}</p>
+                        <p class="text-gh-fg-default text-sm whitespace-pre-wrap leading-relaxed">${reply.content}</p>
                       </div>
                     `)}
                   </div>
                 ` : html`
-                  <div class="text-center py-8 bg-dark/50 border border-lightgray rounded-lg">
+                  <div class="text-center py-8 bg-gh-canvas-default/50 border border-gh-border-default rounded-lg">
                     <${Icon} name="messageCircle" className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-                    <p class="text-gray-500">No replies yet</p>
+                    <p class="text-gh-fg-subtle">No replies yet</p>
                   </div>
                 `}
               </div>
 
               <!-- Reply Form -->
               ${nostrPubkey ? html`
-                <div class="mt-6 pt-6 border-t border-lightgray">
-                  <h4 class="text-md font-semibold text-white mb-4">Add a Reply</h4>
+                <div class="mt-6 pt-6 border-t border-gh-border-default">
+                  <h4 class="text-md font-semibold text-gh-fg-default mb-4">Add a Reply</h4>
 
                   ${error ? html`
                     <div class="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
@@ -1020,7 +1038,7 @@
 
                   <form onSubmit=${(e) => this.handleReplySubmit(e)} class="space-y-3">
                     <textarea
-                      class="w-full h-24 bg-dark border border-lightgray rounded-lg px-4 py-3 text-gray-300 placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                      class="w-full h-24 bg-gh-canvas-default border border-gh-border-default rounded-lg px-4 py-3 text-gh-fg-default placeholder-gray-500 focus:outline-none focus:border-gh-accent-emphasis transition-colors resize-none"
                       placeholder="Write your reply..."
                       value=${replyText}
                       onInput=${(e) => this.setState({ replyText: e.target.value })}
@@ -1031,7 +1049,7 @@
                       <button
                         type="submit"
                         disabled=${submitting || !replyText.trim()}
-                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+                        class="px-4 py-2 bg-gh-accent-emphasis hover:bg-[#0860ca] disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
                       >
                         ${submitting ? html`
                           <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1048,7 +1066,7 @@
                   </form>
                 </div>
               ` : html`
-                <div class="mt-6 pt-6 border-t border-lightgray">
+                <div class="mt-6 pt-6 border-t border-gh-border-default">
                   <div class="p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-center">
                     <p class="text-yellow-400">Connect your Nostr extension to reply to this issue</p>
                   </div>
@@ -1057,11 +1075,11 @@
 
               <!-- Metadata -->
               ${issue.repository ? html`
-                <div class="mt-6 pt-6 border-t border-lightgray">
-                  <div class="flex items-center gap-2 text-sm text-gray-400">
+                <div class="mt-6 pt-6 border-t border-gh-border-default">
+                  <div class="flex items-center gap-2 text-sm text-gh-fg-muted">
                     <${Icon} name="gitBranch" className="h-4 w-4" />
                     <span>Repository:</span>
-                    <code class="text-purple-400">${issue.repository}</code>
+                    <code class="text-gh-accent-fg">${issue.repository}</code>
                   </div>
                 </div>
               ` : null}
@@ -1337,47 +1355,47 @@
         return html`
           <div class="min-h-screen">
             <!-- Hero Section -->
-            <div class="relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-dark to-dark border-b border-lightgray">
+            <div class="relative overflow-hidden bg-gh-canvas-subtle border-b border-gh-border-default">
               <div class="container mx-auto px-4 py-16 relative">
                 <div class="flex items-center gap-3 mb-4">
-                  <${Icon} name="messageCircle" className="h-8 w-8 text-purple-500" />
-                  <h1 class="text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-500 bg-clip-text text-transparent">
+                  <${Icon} name="messageCircle" className="h-8 w-8 text-gh-accent-fg" />
+                  <h1 class="text-5xl font-bold text-gh-fg-default">
                     Issues
                   </h1>
                 </div>
-                <p class="text-xl text-gray-400 max-w-2xl">
+                <p class="text-xl text-gh-fg-muted max-w-2xl">
                   Browse repository issues announced on the Nostr network
                 </p>
 
                 <!-- Stats Bar -->
                 <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                  <div class="bg-gh-canvas-default/50 backdrop-blur-sm border border-gh-border-default rounded-lg p-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm text-gray-400">Connected Relays</p>
-                        <p class="text-2xl font-bold text-white">${connectedRelays}/9</p>
+                        <p class="text-sm text-gh-fg-muted">Connected Relays</p>
+                        <p class="text-2xl font-bold text-gh-fg-default">${connectedRelays}/9</p>
                       </div>
                       <div class="${connectedRelays > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-500'} w-3 h-3 rounded-full"></div>
                     </div>
                   </div>
 
-                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                  <div class="bg-gh-canvas-default/50 backdrop-blur-sm border border-gh-border-default rounded-lg p-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm text-gray-400">Total Issues</p>
+                        <p class="text-sm text-gh-fg-muted">Total Issues</p>
                         <p class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
                           ${issues.length}
                         </p>
                       </div>
-                      <${Icon} name="alertCircle" className="h-6 w-6 text-purple-500" />
+                      <${Icon} name="alertCircle" className="h-6 w-6 text-gh-accent-fg" />
                     </div>
                   </div>
 
-                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                  <div class="bg-gh-canvas-default/50 backdrop-blur-sm border border-gh-border-default rounded-lg p-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm text-gray-400">Events Received</p>
-                        <p class="text-2xl font-bold text-white">${eventCount}</p>
+                        <p class="text-sm text-gh-fg-muted">Events Received</p>
+                        <p class="text-2xl font-bold text-gh-fg-default">${eventCount}</p>
                       </div>
                       <${Icon} name="clock" className="h-6 w-6 text-blue-500" />
                     </div>
@@ -1391,7 +1409,7 @@
               <div class="mb-6">
                 <div class="relative max-w-2xl">
                   <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-5 w-5 text-gh-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                   </div>
@@ -1400,12 +1418,12 @@
                     placeholder="Search issues by title, description, or repository..."
                     value=${searchQuery}
                     onInput=${(e) => this.setState({ searchQuery: e.target.value })}
-                    class="w-full pl-12 pr-4 py-3 bg-dark border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    class="w-full pl-12 pr-4 py-3 bg-gh-canvas-default border border-gh-border-default rounded-lg text-gh-fg-default placeholder-gray-500 focus:outline-none focus:border-gh-accent-emphasis focus:ring-1 focus:ring-purple-500 transition-all"
                   />
                   ${searchQuery ? html`
                     <button
                       onClick=${() => this.setState({ searchQuery: '' })}
-                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gh-fg-muted hover:text-gh-fg-default transition-colors"
                     >
                       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1419,22 +1437,22 @@
               <div class="mb-6 flex items-center gap-2">
                 <button
                   onClick=${() => this.setState({ statusFilter: 'all' })}
-                  class="${statusFilter === 'all' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                  class="${statusFilter === 'all' ? 'bg-gh-accent-emphasis hover:bg-[#0860ca]' : 'border-gh-border-default bg-gh-canvas-default hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
                 >
                   All
                 </button>
                 <button
                   onClick=${() => this.setState({ statusFilter: 'open' })}
-                  class="${statusFilter === 'open' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                  class="${statusFilter === 'open' ? 'bg-gh-accent-emphasis hover:bg-[#0860ca]' : 'border-gh-border-default bg-gh-canvas-default hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
                 >
                   <${Icon} name="alertCircle" className="h-4 w-4 mr-1 text-green-500" />
                   Open
                 </button>
                 <button
                   onClick=${() => this.setState({ statusFilter: 'closed' })}
-                  class="${statusFilter === 'closed' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                  class="${statusFilter === 'closed' ? 'bg-gh-accent-emphasis hover:bg-[#0860ca]' : 'border-gh-border-default bg-gh-canvas-default hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
                 >
-                  <${Icon} name="checkCircle" className="h-4 w-4 mr-1 text-purple-500" />
+                  <${Icon} name="checkCircle" className="h-4 w-4 mr-1 text-gh-accent-fg" />
                   Closed
                 </button>
               </div>
@@ -1443,7 +1461,7 @@
               ${loading && issues.length === 0 ? html`
                 <div class="space-y-4">
                   ${[1, 2, 3, 4].map(i => html`
-                    <div key=${i} class="bg-dark border border-lightgray rounded-lg p-6 animate-pulse">
+                    <div key=${i} class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 animate-pulse">
                       <div class="h-6 bg-lightgray rounded w-3/4 mb-4"></div>
                       <div class="h-4 bg-lightgray rounded w-full mb-2"></div>
                       <div class="h-4 bg-lightgray rounded w-2/3"></div>
@@ -1458,33 +1476,33 @@
                   <div
                     key=${issue.id}
                     onClick=${() => this.setState({ selectedIssue: issue })}
-                    class="group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 rounded-lg border cursor-pointer fade-in"
+                    class="group p-6 bg-gh-canvas-default border-gh-border-default hover:border-gh-accent-emphasis/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 rounded-lg border cursor-pointer fade-in"
                     style="animation-delay: ${index * 0.05}s"
                   >
                     <div class="flex items-start gap-4">
                       <${Icon} name=${issue.status === 'closed' ? 'checkCircle' : 'alertCircle'}
-                        className=${`h-6 w-6 flex-shrink-0 mt-1 ${issue.status === 'closed' ? 'text-purple-500' : 'text-green-500'}`}
+                        className=${`h-6 w-6 flex-shrink-0 mt-1 ${issue.status === 'closed' ? 'text-gh-accent-fg' : 'text-green-500'}`}
                       />
 
                       <div class="flex-1 min-w-0">
                         <div class="flex items-start justify-between gap-4 mb-2">
-                          <h3 class="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors">
+                          <h3 class="text-lg font-semibold text-gh-fg-default group-hover:text-gh-accent-fg transition-colors">
                             ${issue.title}
                           </h3>
-                          <${Icon} name="arrowRight" className="h-5 w-5 text-gray-500 group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                          <${Icon} name="arrowRight" className="h-5 w-5 text-gh-fg-subtle group-hover:text-gh-accent-fg transition-colors flex-shrink-0" />
                         </div>
 
                         ${issue.content ? html`
-                          <p class="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-3">
+                          <p class="text-gh-fg-muted text-sm line-clamp-2 leading-relaxed mb-3">
                             ${issue.content}
                           </p>
                         ` : null}
 
-                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                        <div class="flex items-center gap-4 text-sm text-gh-fg-subtle">
                           ${issue.repository ? html`
                             <span class="flex items-center gap-1">
                               <${Icon} name="gitBranch" className="h-3 w-3" />
-                              <code class="text-xs font-mono text-purple-400">${issue.repository.split(':').pop()}</code>
+                              <code class="text-xs font-mono text-gh-accent-fg">${issue.repository.split(':').pop()}</code>
                             </span>
                           ` : null}
 
@@ -1494,7 +1512,7 @@
                           </span>
 
                           ${issue.replies && issue.replies.length > 0 ? html`
-                            <span class="flex items-center gap-1 text-purple-400">
+                            <span class="flex items-center gap-1 text-gh-accent-fg">
                               <${Icon} name="messageCircle" className="h-3 w-3" />
                               ${issue.replies.length}
                             </span>
@@ -1508,35 +1526,35 @@
 
               <!-- Empty State -->
               ${!loading && issues.length === 0 ? html`
-                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
-                  <${Icon} name="messageCircle" className="h-16 w-16 text-purple-500 mx-auto mb-4 opacity-50" />
-                  <h3 class="text-xl font-semibold mb-2 text-white">
+                <div class="text-center py-16 bg-gh-canvas-default/50 border border-gh-border-default rounded-lg backdrop-blur-sm">
+                  <${Icon} name="messageCircle" className="h-16 w-16 text-gh-accent-fg mx-auto mb-4 opacity-50" />
+                  <h3 class="text-xl font-semibold mb-2 text-gh-fg-default">
                     No issues found yet
                   </h3>
-                  <p class="text-gray-400">
+                  <p class="text-gh-fg-muted">
                     Listening for issue announcements on the Nostr network...
                   </p>
                   <div class="mt-4">
-                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gh-accent-emphasis border-r-transparent"></div>
                   </div>
                 </div>
               ` : null}
 
               <!-- No Search Results -->
               ${!loading && issues.length > 0 && filteredIssues.length === 0 ? html`
-                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
-                  <svg class="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center py-16 bg-gh-canvas-default/50 border border-gh-border-default rounded-lg backdrop-blur-sm">
+                  <svg class="h-16 w-16 text-gh-fg-subtle mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                   </svg>
-                  <h3 class="text-xl font-semibold mb-2 text-white">
+                  <h3 class="text-xl font-semibold mb-2 text-gh-fg-default">
                     No issues match your search
                   </h3>
-                  <p class="text-gray-400">
+                  <p class="text-gh-fg-muted">
                     Try adjusting your search query or filters
                   </p>
                   <button
                     onClick=${() => this.setState({ searchQuery: '', statusFilter: 'all' })}
-                    class="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                    class="mt-4 px-4 py-2 bg-gh-accent-emphasis hover:bg-[#0860ca] rounded-lg transition-colors"
                   >
                     Clear Filters
                   </button>
@@ -1778,47 +1796,47 @@
         return html`
           <div class="min-h-screen">
             <!-- Hero Section -->
-            <div class="relative overflow-hidden bg-gradient-to-br from-purple-900/20 via-dark to-dark border-b border-lightgray">
+            <div class="relative overflow-hidden bg-gh-canvas-subtle border-b border-gh-border-default">
               <div class="container mx-auto px-4 py-16 relative">
                 <div class="flex items-center gap-3 mb-4">
-                  <${Icon} name="zap" className="h-8 w-8 text-purple-500" />
-                  <h1 class="text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-purple-500 bg-clip-text text-transparent">
+                  <${Icon} name="zap" className="h-8 w-8 text-gh-accent-fg" />
+                  <h1 class="text-5xl font-bold text-gh-fg-default">
                     Explore Projects
                   </h1>
                 </div>
-                <p class="text-xl text-gray-400 max-w-2xl">
+                <p class="text-xl text-gh-fg-muted max-w-2xl">
                   Discover decentralized repositories announced on the Nostr network
                 </p>
 
                 <!-- Stats Bar -->
                 <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                  <div class="bg-gh-canvas-default/50 backdrop-blur-sm border border-gh-border-default rounded-lg p-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm text-gray-400">Connected Relays</p>
-                        <p class="text-2xl font-bold text-white">${connectedRelays}/9</p>
+                        <p class="text-sm text-gh-fg-muted">Connected Relays</p>
+                        <p class="text-2xl font-bold text-gh-fg-default">${connectedRelays}/9</p>
                       </div>
                       <div class="${connectedRelays > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-500'} w-3 h-3 rounded-full"></div>
                     </div>
                   </div>
 
-                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                  <div class="bg-gh-canvas-default/50 backdrop-blur-sm border border-gh-border-default rounded-lg p-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm text-gray-400">Repositories</p>
+                        <p class="text-sm text-gh-fg-muted">Repositories</p>
                         <p class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
                           ${repos.length}
                         </p>
                       </div>
-                      <${Icon} name="trendingUp" className="h-6 w-6 text-purple-500" />
+                      <${Icon} name="trendingUp" className="h-6 w-6 text-gh-accent-fg" />
                     </div>
                   </div>
 
-                  <div class="bg-dark/50 backdrop-blur-sm border border-lightgray rounded-lg p-4">
+                  <div class="bg-gh-canvas-default/50 backdrop-blur-sm border border-gh-border-default rounded-lg p-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm text-gray-400">Events Received</p>
-                        <p class="text-2xl font-bold text-white">${eventCount}</p>
+                        <p class="text-sm text-gh-fg-muted">Events Received</p>
+                        <p class="text-2xl font-bold text-gh-fg-default">${eventCount}</p>
                       </div>
                       <${Icon} name="clock" className="h-6 w-6 text-blue-500" />
                     </div>
@@ -1832,7 +1850,7 @@
               <div class="mb-6">
                 <div class="relative max-w-2xl">
                   <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-5 w-5 text-gh-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                   </div>
@@ -1841,12 +1859,12 @@
                     placeholder="Search repositories by name, description, or topic..."
                     value=${this.state.searchQuery}
                     onInput=${(e) => this.setState({ searchQuery: e.target.value })}
-                    class="w-full pl-12 pr-4 py-3 bg-dark border border-lightgray rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    class="w-full pl-12 pr-4 py-3 bg-gh-canvas-default border border-gh-border-default rounded-lg text-gh-fg-default placeholder-gray-500 focus:outline-none focus:border-gh-accent-emphasis focus:ring-1 focus:ring-purple-500 transition-all"
                   />
                   ${this.state.searchQuery ? html`
                     <button
                       onClick=${() => this.setState({ searchQuery: '' })}
-                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                      class="absolute inset-y-0 right-0 pr-4 flex items-center text-gh-fg-muted hover:text-gh-fg-default transition-colors"
                     >
                       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1860,20 +1878,20 @@
               <div class="mb-6 flex items-center gap-2">
                 <button
                   onClick=${() => this.setState({ activeFilter: 'all' })}
-                  class="${activeFilter === 'all' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                  class="${activeFilter === 'all' ? 'bg-gh-accent-emphasis hover:bg-[#0860ca]' : 'border-gh-border-default bg-gh-canvas-default hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
                 >
                   All
                 </button>
                 <button
                   onClick=${() => this.setState({ activeFilter: 'trending' })}
-                  class="${activeFilter === 'trending' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                  class="${activeFilter === 'trending' ? 'bg-gh-accent-emphasis hover:bg-[#0860ca]' : 'border-gh-border-default bg-gh-canvas-default hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
                 >
                   <${Icon} name="trendingUp" className="h-4 w-4 mr-1" />
                   Trending
                 </button>
                 <button
                   onClick=${() => this.setState({ activeFilter: 'new' })}
-                  class="${activeFilter === 'new' ? 'bg-purple-600 hover:bg-purple-700' : 'border-lightgray bg-dark hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
+                  class="${activeFilter === 'new' ? 'bg-gh-accent-emphasis hover:bg-[#0860ca]' : 'border-gh-border-default bg-gh-canvas-default hover:bg-[#171B21]'} inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-9 px-2 border"
                 >
                   <${Icon} name="zap" className="h-4 w-4 mr-1" />
                   New
@@ -1884,7 +1902,7 @@
               ${loading && repos.length === 0 ? html`
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   ${[1, 2, 3, 4].map(i => html`
-                    <div key=${i} class="bg-dark border border-lightgray rounded-lg p-6 animate-pulse">
+                    <div key=${i} class="bg-gh-canvas-default border border-gh-border-default rounded-lg p-6 animate-pulse">
                       <div class="h-6 bg-lightgray rounded w-3/4 mb-4"></div>
                       <div class="h-4 bg-lightgray rounded w-full mb-2"></div>
                       <div class="h-4 bg-lightgray rounded w-2/3"></div>
@@ -1899,19 +1917,19 @@
                   <a
                     key=${repo.id}
                     href=${`#repo/${repo.identifier || repo.name}`}
-                    class="block group p-6 bg-dark border-lightgray hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:scale-[1.02] rounded-lg border shadow-sm fade-in"
+                    class="block group p-6 bg-gh-canvas-default border-gh-border-default hover:border-gh-accent-emphasis/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:scale-[1.02] rounded-lg border shadow-sm fade-in"
                     style="animation-delay: ${index * 0.05}s"
                   >
                     <!-- Repo Header -->
                     <div class="mb-4">
                       <div class="flex items-start justify-between gap-2 mb-2">
-                        <h3 class="text-xl font-semibold text-white group-hover:text-purple-400 transition-colors line-clamp-1 flex-1">
+                        <h3 class="text-xl font-semibold text-gh-fg-default group-hover:text-gh-accent-fg transition-colors line-clamp-1 flex-1">
                           ${repo.name}
                         </h3>
                       </div>
 
                       ${repo.description ? html`
-                        <p class="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-3">
+                        <p class="text-gh-fg-muted text-sm line-clamp-2 leading-relaxed mb-3">
                           ${repo.description}
                         </p>
                       ` : null}
@@ -1920,7 +1938,7 @@
                       ${repo.topics && repo.topics.length > 0 ? html`
                         <div class="flex flex-wrap gap-1.5 mb-3">
                           ${repo.topics.slice(0, 5).map(topic => html`
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-md text-xs text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/40 transition-colors cursor-default">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/10 border border-gh-accent-emphasis/20 rounded-md text-xs text-gh-accent-fg hover:bg-purple-500/20 hover:border-gh-accent-emphasis/40 transition-colors cursor-default">
                               <${Icon} name="tag" className="h-3 w-3" />
                               ${topic}
                             </span>
@@ -1934,7 +1952,7 @@
                           href=${repo.web}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 hover:border-purple-500/50 rounded-lg text-sm text-purple-300 hover:text-purple-200 transition-all duration-200 hover:scale-[1.02] group/web"
+                          class="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-gh-accent-emphasis/30 hover:border-gh-accent-emphasis/50 rounded-lg text-sm text-gh-accent-fg hover:text-purple-200 transition-all duration-200 hover:scale-[1.02] group/web"
                         >
                           <${Icon} name="globe" className="h-3.5 w-3.5" />
                           <span>Visit Website</span>
@@ -1945,7 +1963,7 @@
 
                     <!-- Repo Metadata -->
                     <div class="space-y-3 text-sm">
-                      <div class="flex items-center gap-4 text-gray-500">
+                      <div class="flex items-center gap-4 text-gh-fg-subtle">
                         <div class="flex items-center gap-1">
                           <${Icon} name="calendar" className="h-4 w-4" />
                           <span>${this.formatDate(repo.created_at)}</span>
@@ -1968,7 +1986,7 @@
                                 </a>
                               `)}
                               ${repo.maintainers.length > 3 ? html`
-                                <span class="text-xs text-gray-500">+${repo.maintainers.length - 3}</span>
+                                <span class="text-xs text-gh-fg-subtle">+${repo.maintainers.length - 3}</span>
                               ` : null}
                             </div>
                           </div>
@@ -1977,30 +1995,27 @@
 
                       ${repo.clone ? html`
                         <div class="group/clone relative">
-                          <div class="p-3 bg-gradient-to-br from-[#0E1116] to-[#0A0C0F] rounded-lg border border-lightgray hover:border-purple-500/30 transition-all duration-300">
+                          <div class="p-3 bg-gh-canvas-inset rounded-lg border border-gh-border-default hover:border-gh-accent-emphasis/30 transition-all duration-300">
                             <div class="flex items-start justify-between gap-2">
                               <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1.5">
-                                  <${Icon} name="terminal" className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
-                                  <span class="text-[10px] font-semibold text-purple-400 uppercase tracking-wider">
+                                  <${Icon} name="terminal" className="h-3.5 w-3.5 text-gh-accent-fg flex-shrink-0" />
+                                  <span class="text-[10px] font-semibold text-gh-accent-fg uppercase tracking-wider">
                                     Clone Repository
                                   </span>
                                 </div>
                                 <div class="text-xs font-mono break-all leading-relaxed">
-                                  <span class="text-gray-500 select-none">$</span>
-                                  <span class="text-green-400">git</span>
-                                  <span class="text-blue-400">clone</span>
-                                  <span class="text-purple-300">${repo.clone}</span>
+                                  <span class="text-gh-fg-subtle select-none">$ </span><span class="text-gh-fg-default">git clone </span><span class="text-gh-accent-fg">${repo.clone}</span>
                                 </div>
                               </div>
                               <button
                                 onClick=${() => this.handleCopyClone(repo.clone, repo.id)}
-                                class="flex-shrink-0 p-2 rounded-md bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-200 group/btn"
+                                class="flex-shrink-0 p-2 rounded-md bg-purple-500/10 hover:bg-purple-500/20 border border-gh-accent-emphasis/20 hover:border-gh-accent-emphasis/40 transition-all duration-200 group/btn"
                                 title="Copy clone command"
                               >
                                 ${copiedId === repo.id
                                   ? html`<${Icon} name="check" className="h-3.5 w-3.5 text-green-400" />`
-                                  : html`<${Icon} name="copy" className="h-3.5 w-3.5 text-purple-400 group-hover/btn:text-purple-300" />`
+                                  : html`<${Icon} name="copy" className="h-3.5 w-3.5 text-gh-accent-fg group-hover/btn:text-gh-accent-fg" />`
                                 }
                               </button>
                             </div>
@@ -2010,12 +2025,12 @@
                     </div>
 
                     <!-- Footer -->
-                    <div class="mt-4 pt-4 border-t border-lightgray">
+                    <div class="mt-4 pt-4 border-t border-gh-border-default">
                       <a
                         href=${`https://nostr.eu/${repo.pubkey}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="text-xs text-gray-500 hover:text-purple-400 font-mono flex items-center gap-2 transition-colors group/owner"
+                        class="text-xs text-gh-fg-subtle hover:text-gh-accent-fg font-mono flex items-center gap-2 transition-colors group/owner"
                         title=${`Repository owner: ${repo.pubkey}`}
                       >
                         <div class="w-2 h-2 rounded-full bg-purple-500/50 group-hover/owner:bg-purple-500 transition-colors"></div>
@@ -2023,7 +2038,7 @@
                           <${Icon} name="user" className="h-3 w-3" />
                           <span>Owner:</span>
                         </span>
-                        <span class="text-purple-400 group-hover/owner:text-purple-300">${repo.pubkey.substring(0, 16)}...</span>
+                        <span class="text-gh-accent-fg group-hover/owner:text-gh-accent-fg">${repo.pubkey.substring(0, 16)}...</span>
                         <${Icon} name="externalLink" className="h-2.5 w-2.5 opacity-0 group-hover/owner:opacity-50 transition-opacity" />
                       </a>
                     </div>
@@ -2033,35 +2048,35 @@
 
               <!-- Empty State -->
               ${!loading && repos.length === 0 ? html`
-                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
-                  <${Icon} name="zap" className="h-16 w-16 text-purple-500 mx-auto mb-4 opacity-50" />
-                  <h3 class="text-xl font-semibold mb-2 text-white">
+                <div class="text-center py-16 bg-gh-canvas-default/50 border border-gh-border-default rounded-lg backdrop-blur-sm">
+                  <${Icon} name="zap" className="h-16 w-16 text-gh-accent-fg mx-auto mb-4 opacity-50" />
+                  <h3 class="text-xl font-semibold mb-2 text-gh-fg-default">
                     No repositories found yet
                   </h3>
-                  <p class="text-gray-400">
+                  <p class="text-gh-fg-muted">
                     Listening for repository announcements on the Nostr network...
                   </p>
                   <div class="mt-4">
-                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gh-accent-emphasis border-r-transparent"></div>
                   </div>
                 </div>
               ` : null}
 
               <!-- No Search Results -->
               ${!loading && repos.length > 0 && filteredRepos.length === 0 ? html`
-                <div class="text-center py-16 bg-dark/50 border border-lightgray rounded-lg backdrop-blur-sm">
-                  <svg class="h-16 w-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center py-16 bg-gh-canvas-default/50 border border-gh-border-default rounded-lg backdrop-blur-sm">
+                  <svg class="h-16 w-16 text-gh-fg-subtle mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                   </svg>
-                  <h3 class="text-xl font-semibold mb-2 text-white">
+                  <h3 class="text-xl font-semibold mb-2 text-gh-fg-default">
                     No repositories match your search
                   </h3>
-                  <p class="text-gray-400">
+                  <p class="text-gh-fg-muted">
                     Try adjusting your search query
                   </p>
                   <button
                     onClick=${() => this.setState({ searchQuery: '' })}
-                    class="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+                    class="mt-4 px-4 py-2 bg-gh-accent-emphasis hover:bg-[#0860ca] rounded-lg transition-colors"
                   >
                     Clear Search
                   </button>
